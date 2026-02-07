@@ -11,7 +11,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-indigo-600">EchoRoom</h1>
             <p className="text-sm text-gray-600">
               Ideas • {" "}
-              <Link href="/experiments">Experiments </Link>{" "} • Reflection
+              <Link href="/experiments">Experiments</Link>{" "} • Reflection
             </p>
           </div>
           <span className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700">
@@ -30,8 +30,8 @@ export default function Home() {
         </h2>
 
         <p className="text-lg text-gray-700 max-w-2xl">
-          EchoRoom is a community platform where ideas are not just discussed,
-          but tested through small experiments and reflected upon openly.
+          EchoRoom is a community platform where ideas aren't just discussed they're 
+          tested through real experiments and reflected on openly. Learn by doing, together.
         </p>
 
         {/* Placeholder CTA */}
@@ -62,19 +62,19 @@ export default function Home() {
                 title: "Experiment",
                 emoji: "🧪",
                 color: "emerald",
-                text: "Try the idea through a small, time-bound experiment."
+                text: "Test your idea through a small, time-bound experiment."
               },
               {
                 title: "Outcome",
                 emoji: "📊",
                 color: "amber",
-                text: "Capture what actually happened during the experiment."
+                text: "Record what actually happened  success, fail, or mixed."
               },
               {
                 title: "Reflection",
                 emoji: "🧠",
                 color: "rose",
-                text: "Reflect on learnings and share insights openly."
+                text: "Share what you learned and discuss insights with others."
               }
             ].map((item) => (
               <div
@@ -99,15 +99,15 @@ export default function Home() {
       {/* Capabilities */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <h3 className="text-3xl font-semibold mb-6">
-          What You’ll Be Able to Do
+          What You'll Be Able to Do
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
           {[
-            "Submit ideas to the community",
-            "Run and track experiments",
-            "Document outcomes and reflections",
-            "Learn from shared experiences"
+            "Submit and discuss ideas with the community",
+            "Run and track your own experiments",
+            "Document what happened and what you learned",
+            "Discover insights from others' experiences"
           ].map((text) => (
             <div
               key={text}
@@ -120,7 +120,7 @@ export default function Home() {
         </div>
 
         <p className="mt-8 text-sm text-gray-500">
-          🚧 These features will be built collaboratively during Open Source Quest (OSQ).
+          🚧 These features are being built collaboratively during Open Source Quest (OSQ). Join the fun!
         </p>
       </section>
 
