@@ -18,8 +18,6 @@ function isValidStatus(status: any): status is IdeaStatus {
 }
 
 
-// Allowed lifecycle states
-type IdeaStatus = "proposed" | "experiment" | "outcome" | "reflection";
 
 
 // Temporary in-memory storage
@@ -93,11 +91,13 @@ router.post("/", (req: Request, res: Response) => {
 });
 
 // PATCH /ideas/:id/status
+// PATCH /ideas/:id/status
 router.patch("/:id/status", (req: Request, res: Response) => {
+
   try {
+
     const id = Number(req.params.id);
 
-    // NEW: validate ID format
     if (isNaN(id)) {
       return res.status(400).json({
         success: false,
@@ -105,23 +105,21 @@ router.patch("/:id/status", (req: Request, res: Response) => {
       });
     }
 
-const { status } = req.body;
+    const { status } = req.body;
 
-// validate status exists
-if (!status) {
-  return res.status(400).json({
-    success: false,
-    message: "Status is required",
-  });
-}
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Status is required",
+      });
+    }
 
-// validate status value
-if (!isValidStatus(status)) {
-  return res.status(400).json({
-    success: false,
-    message: "Invalid status value",
-  });
-}
+    if (!isValidStatus(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value",
+      });
+    }
 
     const updatedIdea = updateIdeaStatus(id, status);
 
@@ -139,30 +137,24 @@ if (!isValidStatus(status)) {
 
   } catch (error: any) {
 
-    if (error.message.includes("Invalid transition")) {
+    if (error.message?.includes("Invalid transition")) {
       return res.status(400).json({
         success: false,
         message: error.message,
       });
     }
 
-    idea.status = status;
+    console.error("Error:", error);
 
-    res.json({
-      success: true,
-      idea,
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
 
-  } catch (error) {
-  console.error("Error:", error);
-
-  res.status(500).json({
-    success: false,
-    message: "Internal server error",
-  });
-}
+  }
 
 });
+
 
 
 

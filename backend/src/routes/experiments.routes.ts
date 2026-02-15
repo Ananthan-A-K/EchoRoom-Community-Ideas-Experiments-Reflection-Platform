@@ -51,28 +51,10 @@ router.get("/:id", (req: Request, res: Response) => {
 
 // CREATE experiment
 router.post("/", (req: Request, res: Response) => {
-const { title, description, status } = req.body;
 
-if (!title || !description || !status) {
-  return res.status(400).json({
-    success: false,
-    message: "title, description, and status are required",
-  });
-}
+  const { title, description, status } = req.body;
 
-const newExperiment = createExperiment(
-  title,
-  description,
-  status
-);
-
-res.status(201).json({
-  success: true,
-  data: newExperiment,
-});
- main
-
- if (!ideaId || !title || !description || !status) {
+  if (!title || !description || !status) {
     return res.status(400).json({
       success: false,
       message: "title, description, and status are required",
@@ -81,7 +63,6 @@ res.status(201).json({
 
   const newExperiment = createExperiment(
     title,
-    ideaId,
     description,
     status as ExperimentStatus
   );
@@ -92,6 +73,7 @@ res.status(201).json({
   });
 
 });
+
 
 
 // UPDATE experiment
