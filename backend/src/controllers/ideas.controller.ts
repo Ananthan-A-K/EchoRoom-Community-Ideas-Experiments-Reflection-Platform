@@ -1,7 +1,12 @@
 import { Request, Response } from "express";
 import {
   createIdea,
+  createDraft,
+  updateDraft,
+  publishDraft,
   getAllIdeas,
+  getPublishedIdeas,
+  getDraftIdeas,
   getIdeaById,
   IdeaStatus,
   updateIdeaStatus,
@@ -15,17 +20,132 @@ function isValidString(value: unknown): value is string {
 }
 
 function isValidStatus(status: unknown): status is IdeaStatus {
-  return ["proposed", "experiment", "outcome", "reflection"].includes(
+  return ["draft", "proposed", "experiment", "outcome", "reflection"].includes(
     String(status)
   );
 }
 
 export const getIdeas = (_req: Request, res: Response): void => {
+  const ideas = getPublishedIdeas();
+  res.json({
+    success: true,
+    ideas,
+  });
+};
+
+export const getAllIdeasHandler = (_req: Request, res: Response): void => {
   const ideas = getAllIdeas();
   res.json({
     success: true,
     ideas,
   });
+};
+
+export const getDrafts = (_req: Request, res: Response): void => {
+  const drafts = getDraftIdeas();
+  res.json({
+    success: true,
+    ideas: drafts,
+  });
+};
+
+export const postDraft = (req: Request, res: Response): void => {
+  const { title, description } = req.body;
+
+  if (!isValidString(title) || !isValidString(description)) {
+    res.status(400).json({
+      success: false,
+      message: "Title and description are required",
+    });
+    return;
+  }
+
+  const draft = createDraft(title, description);
+  res.status(201).json({
+    success: true,
+    idea: draft,
+  });
+};
+
+export const putDraft = (req: Request, res: Response): void => {
+  const id = Number(req.params.id);
+  const { title, description } = req.body;
+
+  if (Number.isNaN(id)) {
+    res.status(400).json({
+      success: false,
+      message: "Invalid idea ID",
+    });
+    return;
+  }
+
+  if (!isValidString(title) || !isValidString(description)) {
+    res.status(400).json({
+      success: false,
+      message: "Title and description are required",
+    });
+    return;
+  }
+
+  try {
+    const draft = updateDraft(id, title, description);
+
+    if (!draft) {
+      res.status(404).json({
+        success: false,
+        message: "Draft not found",
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      idea: draft,
+    });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    res.status(400).json({
+      success: false,
+      message,
+    });
+  }
+};
+
+export const publishDraftHandler = (req: Request, res: Response): void => {
+  const id = Number(req.params.id);
+
+  if (Number.isNaN(id)) {
+    res.status(400).json({
+      success: false,
+      message: "Invalid idea ID",
+    });
+    return;
+  }
+
+  try {
+    const idea = publishDraft(id);
+
+    if (!idea) {
+      res.status(404).json({
+        success: false,
+        message: "Draft not found",
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      idea,
+    });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    res.status(400).json({
+      success: false,
+      message,
+    });
+  }
 };
 
 export const postIdea = (req: Request, res: Response): void => {

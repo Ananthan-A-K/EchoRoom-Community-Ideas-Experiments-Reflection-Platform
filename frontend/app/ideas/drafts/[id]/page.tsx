@@ -1,27 +1,67 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { PageLayout } from "../../community/PageLayout";
-import { Button } from "@/components/ui/button";
-import { RetroGrid } from "@/components/ui/retro-grid";
-import { MagicCard } from "@/components/ui/magic-card";
+import LoadingState from "../../components/LoadingState";
+import ErrorState from "../../components/ErrorState";
 
 const API_BASE_URL = "http://localhost:5000";
 
 const TITLE_LIMIT = 80;
 const DESC_LIMIT = 500;
 
-export default function CreateIdeaPage() {
+interface Idea {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+}
+
+export default function DraftDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = Number(params.id);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent, publish: boolean = true) => {
+  useEffect(() => {
+    const fetchDraft = async () => {
+      try {
+        setFetching(true);
+        const res = await fetch(`${API_BASE_URL}/ideas/${id}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Draft not found");
+        }
+
+        const draft: Idea = data.idea;
+        
+        if (draft.status !== "draft") {
+          router.push(`/ideas/${id}`);
+          return;
+        }
+
+        setTitle(draft.title);
+        setDescription(draft.description);
+      } catch (err: any) {
+        setError(err.message || "Failed to load draft");
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    if (!isNaN(id)) {
+      fetchDraft();
+    }
+  }, [id, router]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim() || !description.trim()) {
@@ -33,10 +73,8 @@ export default function CreateIdeaPage() {
       setLoading(true);
       setError(null);
 
-      const endpoint = publish ? "/ideas" : "/ideas/drafts";
-      
-      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: "POST",
+      const res = await fetch(`${API_BASE_URL}/ideas/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json"
         },
@@ -46,14 +84,10 @@ export default function CreateIdeaPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.message || "Failed to create idea");
+        throw new Error(data.message || "Failed to save draft");
       }
 
-      if (publish) {
-        router.push("/ideas");
-      } else {
-        router.push("/ideas/drafts");
-      }
+      router.push("/ideas/drafts");
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -61,73 +95,112 @@ export default function CreateIdeaPage() {
     }
   };
 
-  const handleSaveDraft = (e: React.FormEvent) => {
-    handleSubmit(e, false);
+  const handlePublish = async () => {
+    if (!title.trim() || !description.trim()) {
+      setError("Title and description are required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      await fetch(`${API_BASE_URL}/ideas/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title, description })
+      });
+
+      const res = await fetch(`${API_BASE_URL}/ideas/${id}/publish`, {
+        method: "PATCH"
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to publish draft");
+      }
+
+      router.push("/ideas");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePublish = (e: React.FormEvent) => {
-    handleSubmit(e, true);
-  };
+  if (fetching) {
+    return (
+      <PageLayout>
+        <LoadingState message="Loading draft..." />
+      </PageLayout>
+    );
+  }
+
+  if (error && !title && !description) {
+    return (
+      <PageLayout>
+        <ErrorState message={error} />
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
-      {/* Retro background — no heavy overlay so it stays visible */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <RetroGrid />
       </div>
 
       <div className="section max-w-2xl mx-auto relative">
 
-        {/* Back button — lift-off blue style like your home button */}
         <div className="mb-6">
           <Button
-  onClick={() => router.push("/ideas")}
-  className="
-    rounded-full
-    px-6 py-2
-    text-sm font-medium
-    bg-gradient-to-br from-[#3A9AFF] via-[#2F7CF6] to-[#0992C2]
-    text-white
-    shadow-[0_8px_20px_rgba(0,0,0,0.25)]
-    hover:-translate-y-0.5 hover:scale-[1.03]
-    transition-all
-  "
->
-  ← Back to Ideas
-</Button>
-
+            onClick={() => router.push("/ideas/drafts")}
+            className="
+              rounded-full
+              px-6 py-2
+              text-sm font-medium
+              bg-gradient-to-br from-[#3A9AFF] via-[#2F7CF6] to-[#0992C2]
+              text-white
+              shadow-[0_8px_20px_rgba(0,0,0,0.25)]
+              hover:-translate-y-0.5 hover:scale-[1.03]
+              transition-all
+            "
+          >
+            ← Back to Drafts
+          </Button>
         </div>
 
         <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">
-          Create a New Idea
+          Edit Draft
         </h1>
 
         <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Share something the community can explore and experiment with.
+          Refine your idea and publish when ready.
         </p>
 
         <MagicCard
-  gradientColor="rgba(99,102,241,0.8)"
-  className="
-    p-8
-    rounded-3xl
-    bg-white/75 dark:bg-zinc-900/70
-    backdrop-blur-xl
-    border border-gray-200 dark:border-white/10
-    shadow-xl
-  "
->
+          gradientColor="rgba(99,102,241,0.8)"
+          className="
+            p-8
+            rounded-3xl
+            bg-white/75 dark:bg-zinc-900/70
+            backdrop-blur-xl
+            border border-gray-200 dark:border-white/10
+            shadow-xl
+          "
+        >
 
+          <form onSubmit={handleSave} className="space-y-6">
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-
-            {error && (
+            {error && title && description && (
               <div className="text-red-500 text-sm">
                 {error}
               </div>
             )}
 
-            {/* Title */}
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-800 dark:text-gray-200">
                 Title
@@ -153,7 +226,6 @@ export default function CreateIdeaPage() {
               </div>
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-800 dark:text-gray-200">
                 Description
@@ -179,12 +251,10 @@ export default function CreateIdeaPage() {
               </div>
             </div>
 
-{/* Submit — same lift-off style */}
             <div className="flex gap-4">
               <Button
-                type="button"
+                type="submit"
                 disabled={loading}
-                onClick={handleSaveDraft}
                 className="
                   flex-1
                   rounded-full
@@ -196,7 +266,7 @@ export default function CreateIdeaPage() {
                   transition-all
                 "
               >
-                {loading ? "Saving..." : "Save as Draft"}
+                {loading ? "Saving..." : "Save Draft"}
               </Button>
 
               <Button
@@ -214,10 +284,9 @@ export default function CreateIdeaPage() {
                   transition-all
                 "
               >
-                {loading ? "Publishing..." : "+ Publish Idea"}
+                {loading ? "Publishing..." : "Publish Now"}
               </Button>
             </div>
-
 
           </form>
         </MagicCard>
