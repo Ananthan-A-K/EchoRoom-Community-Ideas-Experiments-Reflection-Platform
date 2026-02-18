@@ -1,16 +1,52 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { apiFetch } from "../lib/api";
+import BackButton from "../components/BackButton";
+import BulbSvg from "@/components/ui/bulb-svg";
+import { useRouter } from "next/navigation";
+import TrashIcon from "@/components/ui/trash-icon";
+import Button from "@/app/components/ui/Button";
+import { MagicCard } from "@/components/ui/magic-card";
+import { Search, Filter } from "lucide-react";
 import { PageLayout } from "../community/PageLayout";
-import { useState } from "react";
-import { useIdeas } from "../context/IdeasContext";
-import { Plus, Search, Filter } from "lucide-react";
+import LoadingState from "../components/LoadingState";
+import ErrorState from "../components/ErrorState";
+
+interface Idea {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+}
 
 export default function IdeasPage() {
-  const { ideas, addIdea } = useIdeas();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newIdea, setNewIdea] = useState({ title: "", description: "" });
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteIdea, setDeleteIdea] = useState<Idea | null>(null);
+  const router = useRouter();
+
+  // Search and Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+
+  useEffect(() => {
+    const fetchIdeas = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const ideasData = await apiFetch<Idea[]>("/ideas");
+        setIdeas(ideasData);
+      } catch (err: any) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIdeas();
+  }, []);
 
   const filteredIdeas = ideas.filter((idea) => {
     const matchesSearch =
@@ -20,93 +56,112 @@ export default function IdeasPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newIdea.title || !newIdea.description) return;
+  if (loading) {
+    return (
+      <PageLayout>
+        <LoadingState message="Loading ideas..." />
+      </PageLayout>
+    );
+  }
 
-    addIdea({
-      title: newIdea.title,
-      description: newIdea.description,
-    });
-
-    setNewIdea({ title: "", description: "" });
-    setIsModalOpen(false);
-  };
+  if (error) {
+    return (
+      <PageLayout>
+        <ErrorState message={error} />
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
       <div className="section">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
-              Ideas in EchoRoom
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
-              Ideas are the starting point of learning. Communities can share ideas,
-              explore them through experiments, and reflect on outcomes.
-            </p>
+        <div className="mb-8">
+          <div className="mb-4">
+            <BackButton />
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="btn-primary flex items-center gap-2 whitespace-nowrap"
-          >
-            <Plus size={20} />
-            Create Idea
-          </button>
-        </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Search ideas..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <BulbSvg className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              <h1 className="text-4xl font-bold text-black dark:text-white">
+                Ideas in EchoRoom
+              </h1>
+            </div>
+
+            <Button onClick={() => router.push("/ideas/create")}>
+              + Create Idea
+            </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Filter
+
+          <p className="text-lg  max-w-2xl text-black dark:text-white mb-8">
+            Ideas are the starting point of learning. Communities can share ideas,
+            explore them through experiments, and reflect on outcomes.
+          </p>
+
+          {/* Search and Filter */}
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                 size={20}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
               />
-              <select
-                className="pl-10 pr-8 py-2 border rounded-lg appearance-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="All">All Status</option>
-                <option value="New">New</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Implemented">Implemented</option>
-                <option value="Discarded">Discarded</option>
-              </select>
+              <input
+                type="text"
+                placeholder="Search ideas..."
+                className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Filter
+                  size={20}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                />
+                <select
+                  className="pl-10 pr-8 py-2 border rounded-lg appearance-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="All">All Status</option>
+                  <option value="New">New</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Implemented">Implemented</option>
+                  <option value="Discarded">Discarded</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        {/* Content */}
+        {/* EMPTY STATE */}
         {ideas.length === 0 ? (
-          /* Empty State - No ideas at all */
-          <div className="card text-center py-12">
-            <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-3">
-              No ideas yet
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
-              Ideas shared by the community will appear here. Be the first to
-              create one.
-            </p>
-            <button onClick={() => setIsModalOpen(true)} className="btn-primary">
-              Create Idea
-            </button>
+          <div className="flex justify-center mt-14">
+            <MagicCard
+              className="p-[1px] rounded-xl w-full"
+              gradientColor="rgba(59,130,246,0.6)"
+            >
+              <div className="bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl rounded-xl border border-white/10 px-10 py-12 text-center">
+                <BulbSvg className="w-10 h-10 mx-auto mb-5 text-blue-400 opacity-80" />
+
+                <h3 className="text-xl font-semibold text-black dark:text-white mb-2">
+                  No ideas yet
+                </h3>
+
+                <p className="text-slate-500 text-sm leading-relaxed mb-7">
+                  Every great project starts with a single idea.
+                  Be the first to share something and spark discussion.
+                </p>
+
+                <Button
+                  variant="primary"
+                  onClick={() => router.push("/ideas/create")}
+                >
+                  + Create First Idea
+                </Button>
+              </div>
+            </MagicCard>
           </div>
         ) : filteredIdeas.length === 0 ? (
           /* Empty State - No matches */
@@ -128,81 +183,97 @@ export default function IdeasPage() {
             </button>
           </div>
         ) : (
-          /* Ideas Grid */
+          /* IDEAS GRID */
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredIdeas.map((idea) => (
-              <div key={idea.id} className="card hover:shadow-lg transition-shadow">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  {idea.title}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
-                  {idea.description}
-                </p>
-                <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${idea.status === "New"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : idea.status === "In Progress"
-                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-                      }`}
+              <MagicCard
+                key={idea.id}
+                className="p-[1px] rounded-xl relative group"
+                gradientColor="rgba(59,130,246,0.6)"
+              >
+                <div className="relative p-5 bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl rounded-xl border border-white/10 h-full flex flex-col">
+                  <button
+                    onClick={() => setDeleteIdea(idea)}
+                    className="absolute top-5 right-5 p-2 text-red-400 hover:text-red-600 z-10"
                   >
-                    {idea.status}
-                  </span>
+                    <TrashIcon className="w-6 h-6" />
+                  </button>
+
+                  <h3 className="text-xl font-semibold text-black dark:text-white mb-2 pr-8">
+                    {idea.title}
+                  </h3>
+
+                  <p className="text-slate-600 dark:text-slate-100 text-sm mb-4 flex-grow">
+                    {idea.description}
+                  </p>
+
+                  <div className="text-sm text-gray-400 mt-auto pt-4 border-t border-white/10">
+                    Status: {idea.status}
+                  </div>
                 </div>
-              </div>
+              </MagicCard>
             ))}
           </div>
         )}
-
-        {/* Create Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full p-6 animate-in fade-in zoom-in-95 duration-200">
-              <h2 className="text-2xl font-bold mb-4 dark:text-white">New Idea</h2>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-gray-200">Title</label>
-                  <input
-                    type="text"
-                    required
-                    value={newIdea.title}
-                    onChange={e => setNewIdea({ ...newIdea, title: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter idea title..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-gray-200">Description</label>
-                  <textarea
-                    required
-                    rows={4}
-                    value={newIdea.description}
-                    onChange={e => setNewIdea({ ...newIdea, description: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500"
-                    placeholder="Describe your idea..."
-                  />
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                  >
-                    Create Idea
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* DELETE MODAL */}
+      {deleteIdea && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <MagicCard
+            className="p-[1px] rounded-2xl"
+            gradientColor="rgba(59,130,246,0.6)"
+          >
+            <div className="bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl px-7 py-7 w-[380px]">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-black dark:text-white">
+                  Delete Idea
+                </h2>
+
+                <p className="text-slate-600 dark:text-slate-200 text-sm mt-2 leading-relaxed">
+                  "{deleteIdea.title}" will be permanently removed.
+                </p>
+              </div>
+
+              <div className="flex gap-4">
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => setDeleteIdea(null)}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(
+                        `http://localhost:5000/ideas/${deleteIdea.id}`,
+                        { method: "DELETE" }
+                      );
+
+                      const data = await res.json();
+
+                      if (!res.ok || !data.success) {
+                        throw new Error(data.message || "Delete failed");
+                      }
+
+                      setIdeas((prev) => prev.filter((i) => i.id !== deleteIdea.id));
+                      setDeleteIdea(null);
+                    } catch (err: any) {
+                      alert(err.message || "Failed to delete idea");
+                    }
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </MagicCard>
+        </div>
+      )}
     </PageLayout>
   );
 }

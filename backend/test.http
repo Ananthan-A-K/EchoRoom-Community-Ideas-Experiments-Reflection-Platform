@@ -1,0 +1,26 @@
+### Create Outcome                                                                                                                                                                                     
+  POST http://localhost:5000/outcomes                                                                                                                                                                    
+  Content-Type: application/json                                                                                                                                                                         
+                                                                                                                                                                                                         
+  {                                                                                                                                                                                                      
+    "experimentId":1,                                                                                                                                                                                   
+    "result": "Success",                                                                                                                                                                                 
+    "notes": "Worked in test"                                                                                                                                                                            
+  }                                                                                                                                                                                                      
+                                                                                                                                                                                                         
+  ### Create Reflection (match outcomeId from above response, usually 1)                                                                                                                                 
+  POST http://localhost:5000/reflections                                                                                                                                                                 
+  Content-Type: application/json                                                                                                                                                                         
+                                                                                                                                                                                                         
+  {                                                                                                                                                                                                      
+    "outcomeId": 1,                                                                                                                                                                                      
+    "content": "We learned to validate input early."                                                                                                                                                     
+  }                                                                                                                                                                                                      
+                                                                                                                                                                                                         
+  Then verify with:                                                                                                                                                                                      
+                                                                                                                                                                                                         
+  ### Get Outcomes                                                                                                                                                                                       
+  GET http://localhost:5000/outcomes                                                                                                                                                                     
+                                                                                                                                                                                                         
+  ### Get Reflections                                                                                                                                                                                    
+  GET http://localhost:5000/reflections  

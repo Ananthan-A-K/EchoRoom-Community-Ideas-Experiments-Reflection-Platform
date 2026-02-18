@@ -1,6 +1,11 @@
 // backend/src/services/experiments.service.ts
 
 export type ExperimentStatus = "planned" | "in-progress" | "completed";
+export const EXPERIMENT_PROGRESS_BY_STATUS: Record<ExperimentStatus, number> = {
+  planned: 0,
+  "in-progress": 50,
+  completed: 100,
+};
 
 export interface Experiment {
   id: number;
@@ -14,6 +19,20 @@ export interface Experiment {
 // in-memory storage
 let experiments: Experiment[] = [];
 let nextId = 1;
+
+export const isExperimentStatus = (value: unknown): value is ExperimentStatus => {
+  return (
+    value === "planned" ||
+    value === "in-progress" ||
+    value === "completed"
+  );
+};
+
+export const getProgressForExperimentStatus = (
+  status: ExperimentStatus
+): number => {
+  return EXPERIMENT_PROGRESS_BY_STATUS[status];
+};
 
 
 // Get all experiments
