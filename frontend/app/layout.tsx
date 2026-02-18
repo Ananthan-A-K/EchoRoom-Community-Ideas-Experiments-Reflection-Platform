@@ -1,8 +1,7 @@
 import "../styles/globals.css";
-import { ThemeProvider } from "./components/ThemeProvider";
 import { GlobalNavbar } from "./components/GlobalNavbar";
+import { ThemeProvider } from "./components/ThemeProvider";
 import { ExperimentsProvider } from "./context/ExperimentsContext";
-import { IdeasProvider } from "./context/IdeasContext";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
 
 export const metadata = {
@@ -20,12 +19,9 @@ export default function RootLayout({
       <body className="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white transition-colors">
         <ThemeProvider>
           <ExperimentsProvider>
-            <IdeasProvider>
-              {children}
-            </IdeasProvider>
             <SmoothCursor />
-            <GlobalNavbar />
             {children}
+            <GlobalNavbar />
           </ExperimentsProvider>
         </ThemeProvider>
       </body>
