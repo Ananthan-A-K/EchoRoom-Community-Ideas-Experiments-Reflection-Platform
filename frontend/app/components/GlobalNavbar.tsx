@@ -39,18 +39,23 @@ export function GlobalNavbar({ showLearningFlow = true }: { showLearningFlow?: b
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [user, setUser] = useState<UserData | null>(() => {
-    if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("user");
-    if (!stored) return null;
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState<UserData | null>(null);
+  const [mounted, setMounted] = useState(false);
   const { dark, toggleTheme } = useTheme();
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Load user from localStorage after mount to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -139,61 +144,70 @@ export function GlobalNavbar({ showLearningFlow = true }: { showLearningFlow?: b
             )}
           </button>
 
-          {user ? (
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"
-              >
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                  {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
-                </div>
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200 hidden sm:block">
-                  {user.name || user.email?.split("@")[0]}
-                </span>
-                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
-              </button>
-
-                {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{user.name || "User"}</p>
-                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+          {/* Auth section - use suppressHydrationWarning to prevent mismatch */}
+          <div suppressHydrationWarning>
+            {!mounted ? (
+              // Placeholder during SSR to prevent hydration mismatch
+              <div className="flex items-center gap-2">
+                <div className="w-16 h-9 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                <div className="w-20 h-9 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+              </div>
+            ) : user ? (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"
+                >
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+                    {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
                   </div>
-                  <Link
-                    href="/profile"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
-                  >
-                    <User className="w-4 h-4" />
-                    Profile
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/login"
-                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-[#9CCFFF] hover:from-blue-400 hover:to-indigo-500 rounded-full transition-all hover:scale-105 active:scale-95"
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-200 hidden sm:block">
+                    {user.name || user.email?.split("@")[0]}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                  {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{user.name || "User"}</p>
+                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    </div>
+                    <Link
+                      href="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                    >
+                      <User className="w-4 h-4" />
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-[#9CCFFF] hover:from-blue-400 hover:to-indigo-500 rounded-full transition-all hover:scale-105 active:scale-95"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
 
           <button
             className="md:hidden text-slate-900 dark:text-white p-2"
