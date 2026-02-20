@@ -326,6 +326,165 @@ Experiments and Reflections are connected to Ideas and Outcomes within the learn
     response: `EchoRoom is part of Open Source Quest (OSQ).
 
 It is designed to support contributors from diverse skill backgrounds and encourage structured collaborative learning.`
+  },
+  // ===============================
+  // ACCOUNT & AUTHENTICATION
+  // ===============================
+
+  {
+    keywords: [
+      "sign up",
+      "register",
+      "create account",
+      "join",
+      "how to join"
+    ],
+    response: `To join EchoRoom:
+
+1. Click "Sign Up" or "Login" in the navigation bar
+2. Authenticate using your preferred method
+3. Set up your profile
+
+Once logged in, you can start creating Ideas and Experiments.`
+  },
+
+  {
+    keywords: [
+      "login",
+      "sign in",
+      "cant log in",
+      "log out",
+      "sign out"
+    ],
+    response: `You can log in or log out using the button in the main navigation menu.
+
+If you are having trouble logging in, ensure you are using the same authentication method you used to sign up.`
+  },
+
+  // ===============================
+  // EDITING & DELETING CONTENT
+  // ===============================
+
+  {
+    keywords: [
+      "edit idea",
+      "update idea",
+      "change idea",
+      "edit experiment",
+      "modify"
+    ],
+    response: `You can edit your content if you are the creator.
+
+• Drafts can be edited freely.
+• Published Ideas and Experiments can be updated to reflect new information.
+
+Look for the "Edit" button on the specific Idea or Experiment page.`
+  },
+
+  {
+    keywords: [
+      "delete",
+      "remove",
+      "delete idea",
+      "delete experiment",
+      "undo"
+    ],
+    response: `To delete content:
+
+1. Go to the item you want to delete
+2. Click the "Edit" or "Options" menu
+3. Select "Delete"
+
+Warning: Deleting an Idea may affect linked Experiments and Outcomes.`
+  },
+
+  // ===============================
+  // COLLABORATION & INTERACTION
+  // ===============================
+
+  {
+    keywords: [
+      "comment",
+      "discuss",
+      "reply",
+      "feedback on idea"
+    ],
+    response: `EchoRoom encourages collaborative learning.
+
+You can leave comments on published Ideas, Experiments, and Reflections to offer feedback, ask questions, or suggest improvements.`
+  },
+
+  {
+    keywords: [
+      "collaborate",
+      "join experiment",
+      "team",
+      "work together"
+    ],
+    response: `While Ideas are created by individuals, the learning is shared.
+
+You can collaborate by:
+• Commenting on Ideas
+• Running parallel Experiments based on someone else's Idea
+• Sharing your own Reflections on community Outcomes`
+  },
+
+  // ===============================
+  // SEARCH & DISCOVERY
+  // ===============================
+
+  {
+    keywords: [
+      "search",
+      "find",
+      "filter",
+      "discover",
+      "explore"
+    ],
+    response: `To find specific content:
+
+Use the search bar or filters on the Ideas and Experiments pages.
+You can filter by:
+• Tags/Categories
+• Status (Active, Completed)
+• Most recent`
+  },
+
+  // ===============================
+  // TROUBLESHOOTING & FEEDBACK
+  // ===============================
+
+  {
+    keywords: [
+      "bug",
+      "error",
+      "broken",
+      "not working",
+      "report issue",
+      "feedback"
+    ],
+    response: `Found a bug or have a suggestion? 
+
+Since EchoRoom is part of Open Source Quest (OSQ), you can report issues or contribute directly via our GitHub repository. 
+
+Your feedback helps improve the platform for everyone!`
+  },
+
+  // ===============================
+  // BOT IDENTITY 
+  // ===============================
+
+  {
+    keywords: [
+      "who are you",
+      "what are you",
+      "are you ai",
+      "are you human",
+      "bot"
+    ],
+    response: `I am Echion, the AI guide for EchoRoom. 
+
+I am here to help you navigate the platform, understand the learning loop, and answer any questions you have about using the site.`
   }
 
 ];
@@ -334,12 +493,10 @@ export const fallbackResponse = `
 I’m Echion, your EchoRoom guide.
 
 I can help with:
-• Ideas
-• Experiments
-• Outcomes
-• Reflections
-• Draft vs Publish
-• Learning loop
+• Navigating the Learning Loop (Ideas, Experiments, Outcomes, Reflections)
+• Draft vs Publish settings
+• Account and profile questions
+• Finding and editing content
 • Getting started
 
 For unrelated topics, please use a general search tool.

@@ -92,21 +92,21 @@ export default function Echion() {
   <div className="absolute bottom-16 right-14 z-50 animate-in fade-in slide-in-from-bottom-4 slide-in-from-right-4 zoom-in-95 duration-500 ease-out">
     <div className="
       relative
-      bg-gradient-to-br from-blue-500 to-blue-600
+      bg-gradient-to-br from-[#8CE4FF] to-[#0F2854]
       text-white
       px-5 py-3
       rounded-2xl
       shadow-lg shadow-blue-500/30
-      border border-blue-400/20
+      
       w-max
       max-w-[200px]
     ">
       
       {/* Cloud Trail: Medium Circle */}
-      <div className="absolute -bottom-2 -right-1 w-3.5 h-3.5 bg-blue-600 rounded-full shadow-sm z-[-1]"></div>
+      <div className="absolute -bottom-3 -right-1 w-3.5 h-3.5 bg-[#0F2854] rounded-full shadow-sm z-[-1]"></div>
       
       {/* Cloud Trail: Smallest Circle (closest to icon) */}
-      <div className="absolute -bottom-4 -right-3 w-2 h-2 bg-blue-600 rounded-full shadow-sm z-[-1]"></div>
+      <div className="absolute -bottom-5 -right-3 w-2 h-2 bg-[#0F2854] rounded-full shadow-sm z-[-1]"></div>
 
       <TypingAnimation 
         duration={50} 
