@@ -8,7 +8,34 @@ export const echionIntents: EchionIntent[] = [
   // ===============================
   // PLATFORM PURPOSE & PHILOSOPHY
   // ===============================
+  {
+        keywords: [
+            "hi",
+            "hello",
+            "hey",
+            "good morning",
+            "good afternoon",
+            "good evening"
+        ],
+        response: `Hey there 👋
 
+        I'm Echion, your EchoRoom assistant.
+
+        You can ask me about:
+        • Ideas
+        • Experiments
+        • Outcomes
+        • Reflections
+        • How to get started
+
+        What would you like to know?`
+},
+{
+  keywords: ["thanks", "thank you", "ty"],
+  response: `You're welcome 😊
+
+If you have more questions about EchoRoom, I’m here to help.`
+},
   {
     keywords: [
       "what is echoroom",

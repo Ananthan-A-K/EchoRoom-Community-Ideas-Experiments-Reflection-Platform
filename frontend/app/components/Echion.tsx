@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { echionIntents, fallbackResponse } from "@/app/lib/echionKnowledge";
+import { TypingAnimation } from "@/components/ui/typing-animation";
+import Button from "@/app/components/ui/Button";
+import { MagicCard } from "@/components/ui/magic-card";
+import { AnimatedGradientText } from "@/components/ui/animated-gradient-text"
 
 export default function Echion() {
   const [open, setOpen] = useState(false);
@@ -9,43 +13,41 @@ export default function Echion() {
   const [input, setInput] = useState("");
 
   const handleUserInput = () => {
-  const text = input
-  .toLowerCase()
-  .replace(/[^\w\s]/g, "")
-  .trim();
-  const words = text.split(/\s+/);
+    const text = input
+      .toLowerCase()
+      .replace(/[^\w\s]/g, "")
+      .trim();
 
-  let bestMatch = null;
-  let highestScore = 0;
+    const words = text.split(/\s+/);
 
-  for (const intent of echionIntents) {
-    let score = 0;
+    let bestMatch = null;
+    let highestScore = 0;
 
-    for (const keyword of intent.keywords) {
-      const keywordWords = keyword.split(/\s+/);
+    for (const intent of echionIntents) {
+      let score = 0;
 
-      for (const kw of keywordWords) {
-        if (words.includes(kw)) {
-          score++;
+      for (const keyword of intent.keywords) {
+        const keywordWords = keyword.split(/\s+/);
+
+        for (const kw of keywordWords) {
+          if (words.includes(kw)) score++;
         }
+      }
+
+      if (score > highestScore) {
+        highestScore = score;
+        bestMatch = intent;
       }
     }
 
-    if (score > highestScore) {
-      highestScore = score;
-      bestMatch = intent;
+    if (bestMatch && highestScore > 0) {
+      setResponse(bestMatch.response);
+    } else {
+      setResponse(fallbackResponse);
     }
-  }
 
-  // Require at least 1 meaningful match
-  if (bestMatch && highestScore > 0) {
-    setResponse(bestMatch.response);
-  } else {
-    setResponse(fallbackResponse);
-  }
-
-  setInput("");
-};
+    setInput("");
+  };
 
   const triggerIntent = (keyword: string) => {
     const intent = echionIntents.find((i) =>
@@ -71,41 +73,60 @@ export default function Echion() {
 
       {/* Assistant Panel */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 bg-[#0f172a] text-white rounded-2xl shadow-2xl border border-white/10 p-4">
-          <h2 className="text-lg font-semibold mb-2">Echion</h2>
+  <div className="fixed bottom-24 right-6 z-50 w-80">
+    <MagicCard
+      className="rounded-2xl border border-white/10 bg-[#0f172a]/80 backdrop-blur-xl p-5 text-white shadow-2xl"
+      gradientColor="#3b82f6"
+    >
+          <AnimatedGradientText className="text-lg font-semibold mb-3">
+          
+            Echion
+            </AnimatedGradientText>
 
-          <p className="text-sm text-white/80 mb-3">
-            I’m Echion 👋 I can guide you through EchoRoom.
-          </p>
-
+          {/* Animated Intro Text */}
+          <div className="mb-5">
+  <TypingAnimation
+    duration={15}
+    className="block text-sm text-black/80 dark:text-white/80"
+  >
+    I’m Echion 👋 I can guide you through EchoRoom.
+  </TypingAnimation>
+</div>
           {/* Suggestion Chips */}
           <div className="flex flex-wrap gap-2 mb-4">
+            
             <button
               onClick={() => triggerIntent("what is echoroom")}
-              className="text-xs px-3 py-1 bg-white/10 rounded-full hover:bg-white/20"
+              className="text-black/80 dark:text-white/80 text-xs px-3 py-1 bg-black/10 dark:bg-white/10 rounded-full hover:bg-black/20 dark:hover:bg-white/20"
             >
               What is EchoRoom?
             </button>
 
             <button
               onClick={() => triggerIntent("create idea")}
-              className="text-xs px-3 py-1 bg-white/10 rounded-full hover:bg-white/20"
+              className="text-black/80 dark:text-white/80 text-xs px-3 py-1 bg-black/10 dark:bg-white/10 rounded-full hover:bg-black/20 dark:hover:bg-white/20"
             >
               How do I create an idea?
             </button>
 
             <button
               onClick={() => triggerIntent("how to start")}
-              className="text-xs px-3 py-1 bg-white/10 rounded-full hover:bg-white/20"
+              className="text-black/80 dark:text-white/80 text-xs px-3 py-1 bg-black/10 dark:bg-white/10 rounded-full hover:bg-black/20 dark:hover:bg-white/20"
             >
               Where should I start?
             </button>
           </div>
 
-          {/* Response Area */}
+          {/* Animated Response */}
           {response && (
-            <div className="text-sm text-white/90 whitespace-pre-line border-t border-white/10 pt-3 mb-3">
-              {response}
+            <div className="text-sm text-black/80 dark:text-white/80 border-t border-white/10 pt-3 mb-3">
+              <TypingAnimation
+                key={response}
+                duration={20}
+                className="whitespace-pre-line leading-5"
+              >
+                {response.trim()}
+              </TypingAnimation>
             </div>
           )}
 
@@ -116,16 +137,19 @@ export default function Echion() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleUserInput()}
               placeholder="Ask about ideas, experiments, reflections..."
-              className="flex-1 px-3 py-2 text-sm rounded-lg bg-white/10 outline-none"
+              className="text-black/80 dark:text-white/80 flex-1 px-3 py-2 text-sm rounded-lg bg-black/20 dark:bg-white/20 outline-none"
             />
-            <button
-              onClick={handleUserInput}
-              className="px-3 py-2 text-sm bg-blue-500 rounded-lg hover:bg-blue-600"
-            >
-              Ask
-            </button>
+            <Button
+  onClick={handleUserInput}
+  variant="primary"
+  size="sm"
+  className="rounded-lg"
+>
+  Ask
+</Button>
           </div>
-        </div>
+            </MagicCard>
+  </div>
       )}
     </>
   );
