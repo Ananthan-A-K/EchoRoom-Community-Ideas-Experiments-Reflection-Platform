@@ -108,7 +108,9 @@ idea.updatedAt = new Date().toISOString();
 
 // Publish a draft (change from draft to proposed)
 export const publishDraft = (id: number): Idea | null => {
-  return updateIdeaStatus(id, "proposed");
+ export const publishDraft = (id: number, version: number): Idea | null => {
+  return updateIdeaStatus(id, "proposed", version);
+};
 };
 
 
