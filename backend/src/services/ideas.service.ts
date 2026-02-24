@@ -1,6 +1,7 @@
 import { getNextIdeaId, ideas } from "../data/ideas.data";
 import { StateMachine } from "../lib/statemachine";
 import { ConflictError } from "../lib/conflictError";
+
 export type IdeaStatus =
   | "draft"
   | "proposed"
@@ -106,7 +107,7 @@ export const createDraft = (
   return newDraft;
 };
 
-// 🔹 Update draft (with optimistic locking)
+// 🔹 Update draft (optimistic locking)
 export const updateDraft = (
   id: number,
   title: string,
@@ -136,7 +137,7 @@ export const publishDraft = (
   return updateIdeaStatus(id, "proposed", version);
 };
 
-// 🔹 Update idea status (with state machine + optimistic locking)
+// 🔹 Update idea status (state machine + optimistic locking)
 export const updateIdeaStatus = (
   id: number,
   status: IdeaStatus,

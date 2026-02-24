@@ -23,7 +23,9 @@ function isValidStatus(status: unknown): status is IdeaStatus {
   );
 }
 
-function isValidComplexity(complexity: unknown): complexity is "LOW" | "MEDIUM" | "HIGH" {
+function isValidComplexity(
+  complexity: unknown
+): complexity is "LOW" | "MEDIUM" | "HIGH" {
   return ["LOW", "MEDIUM", "HIGH"].includes(String(complexity));
 }
 
