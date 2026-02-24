@@ -2,6 +2,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import "dotenv/config";
+import v1Routes from "./routes/v1";
 
 
 
@@ -14,8 +15,10 @@ app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
 
 app.get("/health", (_req: Request, res: Response) => {
+  
   res.json({ success: true, message: "Backend is running" });
 });
+app.use("/api/v1", v1Routes);
 
 
 
