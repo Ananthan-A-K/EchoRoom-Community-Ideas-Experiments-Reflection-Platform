@@ -7,13 +7,21 @@ import { PageLayout } from "../../community/PageLayout";
 import Button from "@/app/components/ui/Button";
 import { MagicCard } from "@/components/ui/magic-card";
 import { RetroGrid } from "@/components/ui/retro-grid";
-
+import SmoothSlider from "@/components/ui/SmoothSlider"; 
 interface Outcome {
   id: number;
   experimentId: number;
   experimentTitle: string;
   result: string;
 }
+
+const emotionOptions = [
+  { value: 1, emoji: "😞", label: "Very Low" },
+  { value: 2, emoji: "😕", label: "Low" },
+  { value: 3, emoji: "😐", label: "Neutral" },
+  { value: 4, emoji: "🙂", label: "Good" },
+  { value: 5, emoji: "😄", label: "Great" },
+];
 
 type Visibility = "private" | "public";
 
@@ -24,6 +32,12 @@ export default function NewReflectionPage() {
   const [outcomes, setOutcomes] = useState<Outcome[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // New state for the custom toast/popup notification
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
+    message: "",
+    visible: false,
+  });
 
   const [form, setForm] = useState({
     outcomeId: null as number | null,
@@ -111,8 +125,22 @@ export default function NewReflectionPage() {
     return true;
   };
 
+  // Helper to trigger the notification popup
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, visible: false }));
+    }, 3000);
+  };
+
   const nextStep = () => {
-    if (validateStep()) setStep((prev) => prev + 1);
+    if (validateStep()) {
+      setStep((prev) => {
+        const next = prev + 1;
+        showToast(`Step ${next}!`);
+        return next;
+      });
+    }
   };
 
   const prevStep = () => {
@@ -131,11 +159,13 @@ export default function NewReflectionPage() {
         body: JSON.stringify(form),
       });
 
-      router.push("/reflection");
+      showToast("Reflection Submitted Successfully!");
+      setTimeout(() => {
+         router.push("/reflection");
+      }, 1000); // Slight delay so they can see the success toast
     } catch (err: any) {
       setError(err.message || "Failed to create reflection");
-    } finally {
-      setLoading(false);
+      setLoading(false); // Make sure to re-enable button on fail
     }
   };
 
@@ -146,8 +176,7 @@ export default function NewReflectionPage() {
       </div>
 
       <PageLayout>
-        <div className="section max-w-2xl mx-auto">
-
+        <div className="section max-w-2xl mx-auto relative z-10">
           <div className="mb-6">
             <Button
               onClick={() => router.push("/reflection")}
@@ -169,26 +198,57 @@ export default function NewReflectionPage() {
             gradientColor="rgba(59,130,246,0.6)"
             className="p-8 rounded-3xl bg-white/75 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/10 shadow-xl"
           >
-            <p className="text-sm text-gray-500 mb-6">
-              Step {step} of 5
-            </p>
+            {/* Visual Stepper UI added here */}
+            <div className="flex items-center justify-center w-full mb-10 mt-2">
+              {[1, 2, 3, 4, 5].map((s, index) => (
+                <div key={s} className="flex items-center">
+                  {/* Step Node */}
+                  <div
+                    className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-300 ${
+                      s < step
+                        ? "bg-blue-600 text-white" // Completed
+                        : s === step
+                        ? "bg-blue-600 text-white ring-4 ring-blue-500/30 shadow-[0_0_15px_rgba(37,99,235,0.5)]" // Current
+                        : "bg-gray-200 dark:bg-zinc-800 text-gray-500" // Upcoming
+                    }`}
+                  >
+                    {s < step ? (
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      s
+                    )}
+                  </div>
 
-            {error && (
-              <div className="text-red-500 text-sm mb-4">{error}</div>
-            )}
+                  {/* Connector Line */}
+                  {index < 4 && (
+                    <div
+                      className={`w-10 sm:w-16 h-1 mx-2 rounded transition-all duration-300 ${
+                        s < step ? "bg-blue-600" : "bg-gray-200 dark:bg-zinc-800"
+                      }`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
             {/* STEP 1 */}
             {step === 1 && (
-              <div className="space-y-6">
-                <label className="block text-sm font-medium">
-                  Select Outcome
-                </label>
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <label className="block text-sm font-medium">Select Outcome</label>
                 <select
-                  className="w-full p-3 rounded-xl border bg-white dark:bg-zinc-950"
+                  className="w-full p-3 rounded-xl border bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-blue-500 outline-none transition"
                   value={form.outcomeId ?? ""}
-                  onChange={(e) =>
-                    setForm({ ...form, outcomeId: Number(e.target.value) })
-                  }
+                  onChange={(e) => setForm({ ...form, outcomeId: Number(e.target.value) })}
                 >
                   <option value="">Choose outcome</option>
                   {outcomes.map((o) => (
@@ -198,257 +258,306 @@ export default function NewReflectionPage() {
                   ))}
                 </select>
 
-                <Button onClick={nextStep} className="w-full rounded-full py-3">
-                  Next
-                </Button>
+                <div className="flex justify-end pt-4">
+                  <Button onClick={nextStep} className="rounded-full px-8 py-2">
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
 
             {/* STEP 2 */}
             {step === 2 && (
-              <div className="space-y-6">
-                <h2 className="font-semibold">Before Starting</h2>
+              <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
+                <h2 className="font-semibold text-lg">Before Starting</h2>
 
                 <div>
-                  <label className="block text-sm mb-2">
-                    Emotion (1–5)
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={5}
-                    className="w-full p-3 rounded-xl border"
-                    value={form.context.emotionBefore}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        context: {
-                          ...form.context,
-                          emotionBefore: Number(e.target.value),
-                        },
-                      })
-                    }
-                  />
+                  <label className="block text-sm mb-3 text-gray-700 dark:text-gray-300">How did you feel?</label>
+                  <div className="flex justify-between max-w-sm">
+                    {emotionOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            context: { ...form.context, emotionBefore: option.value },
+                          })
+                        }
+                        className={`text-2xl p-3 rounded-xl transition-all duration-200 ${
+                          form.context.emotionBefore === option.value
+                            ? "bg-blue-500/20 scale-110 shadow-sm"
+                            : "hover:scale-110 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                        }`}
+                      >
+                        {option.emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2">
-                    Confidence (1–10)
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={10}
-                    className="w-full p-3 rounded-xl border"
-                    value={form.context.confidenceBefore}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        context: {
-                          ...form.context,
-                          confidenceBefore: Number(e.target.value),
-                        },
-                      })
-                    }
-                  />
-                </div>
+  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">
+    Confidence (1–10)
+  </label>
+  <SmoothSlider
+    min={1}
+    max={10}
+    value={form.context.confidenceBefore}
+    onChange={(val) =>
+      setForm({
+        ...form,
+        context: { ...form.context, confidenceBefore: val },
+      })
+    }
+  />
+</div>
 
-                <div className="flex justify-between">
-                  <Button onClick={prevStep}>Back</Button>
-                  <Button onClick={nextStep}>Next</Button>
+                <div className="flex justify-between pt-4">
+                  <Button onClick={prevStep} variant="outline" className="rounded-full px-6">
+                    Previous
+                  </Button>
+                  <Button onClick={nextStep} className="rounded-full px-8">
+                    Next
+                  </Button>
                 </div>
               </div>
             )}
 
             {/* STEP 3 */}
             {step === 3 && (
-              <div className="space-y-4">
-                <h2 className="font-semibold">Breakdown</h2>
+              <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
+                <h2 className="font-semibold text-lg">Breakdown</h2>
 
                 {[
-                  { key: "whatHappened", label: "What happened?" },
-                  { key: "whatWorked", label: "What worked?" },
-                  { key: "whatDidntWork", label: "What didn’t work?" },
-                ].map((field) => (
-                  <div key={field.key}>
-                    <label className="block text-sm mb-2">
-                      {field.label}
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="w-full p-3 rounded-xl border"
-                      value={(form.breakdown as any)[field.key]}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          breakdown: {
-                            ...form.breakdown,
-                            [field.key]: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                ))}
+                  { 
+                    key: "whatHappened", 
+                    label: "What happened?", 
+                    placeholder: "Briefly describe the event, context, and the final outcome..." 
+                  },
+                  { 
+                    key: "whatWorked", 
+                    label: "What worked?", 
+                    placeholder: "List the strategies, actions, or decisions that yielded positive results..." 
+                  },
+                  { 
+                    key: "whatDidntWork", 
+                    label: "What didn’t work?", 
+                    placeholder: "Note any challenges, bottlenecks, or assumptions that proved wrong..." 
+                  },
+                ].map((field) => {
+                  const currentValue = (form.breakdown as any)[field.key];
+                  const wordCount = currentValue.trim().split(/\s+/).filter(Boolean).length;
+                  const maxWords = 50; // Change limit here if needed
 
-                <div className="flex justify-between">
-                  <Button onClick={prevStep}>Back</Button>
-                  <Button onClick={nextStep}>Next</Button>
+                  return (
+                    <div key={field.key}>
+                      <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">{field.label}</label>
+                      <textarea
+                        rows={3}
+                        placeholder={field.placeholder}
+                        className="w-full p-3 rounded-xl border bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-600"
+                        value={currentValue}
+                        onChange={(e) => {
+                          const inputText = e.target.value;
+                          const currentWords = inputText.trim().split(/\s+/).filter(Boolean).length;
+                          
+                          // Only allow typing if under word limit OR if they are deleting characters
+                          if (currentWords <= maxWords || inputText.length < currentValue.length) {
+                            setForm({
+                              ...form,
+                              breakdown: { ...form.breakdown, [field.key]: inputText },
+                            });
+                          }
+                        }}
+                      />
+                      <div className={`text-xs text-right mt-1 ${wordCount >= maxWords ? 'text-red-500' : 'text-gray-400'}`}>
+                        {wordCount} / {maxWords} words
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div className="flex justify-between pt-4">
+                  <Button onClick={prevStep} variant="outline" className="rounded-full px-6">
+                    Previous
+                  </Button>
+                  <Button onClick={nextStep} className="rounded-full px-8">
+                    Next
+                  </Button>
                 </div>
               </div>
             )}
 
             {/* STEP 4 */}
             {step === 4 && (
-              <div className="space-y-4">
-                <h2 className="font-semibold">Growth</h2>
+              <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
+                <h2 className="font-semibold text-lg">Growth</h2>
 
                 <div>
-                  <label className="block text-sm mb-2">
-                    Lesson Learned
-                  </label>
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Lesson Learned</label>
                   <textarea
                     rows={3}
-                    className="w-full p-3 rounded-xl border"
+                    placeholder="What is the core takeaway or insight you gained from this experience?"
+                    className="w-full p-3 rounded-xl border bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-600"
                     value={form.growth.lessonLearned}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        growth: {
-                          ...form.growth,
-                          lessonLearned: e.target.value,
-                        },
-                      })
-                    }
+                    onChange={(e) => {
+                      const inputText = e.target.value;
+                      const currentWords = inputText.trim().split(/\s+/).filter(Boolean).length;
+                      if (currentWords <= 50 || inputText.length < form.growth.lessonLearned.length) {
+                        setForm({
+                          ...form,
+                          growth: { ...form.growth, lessonLearned: inputText },
+                        });
+                      }
+                    }}
                   />
+                  <div className={`text-xs text-right mt-1 ${form.growth.lessonLearned.trim().split(/\s+/).filter(Boolean).length >= 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                    {form.growth.lessonLearned.trim().split(/\s+/).filter(Boolean).length} / 50 words
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2">
-                    What will you do differently next time?
-                  </label>
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">What will you do differently next time?</label>
                   <textarea
                     rows={3}
-                    className="w-full p-3 rounded-xl border"
+                    placeholder="Describe specific, actionable changes you will make moving forward..."
+                    className="w-full p-3 rounded-xl border bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none placeholder:text-gray-400 dark:placeholder:text-zinc-600"
                     value={form.growth.nextAction}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        growth: {
-                          ...form.growth,
-                          nextAction: e.target.value,
-                        },
-                      })
-                    }
+                    onChange={(e) => {
+                      const inputText = e.target.value;
+                      const currentWords = inputText.trim().split(/\s+/).filter(Boolean).length;
+                      if (currentWords <= 50 || inputText.length < form.growth.nextAction.length) {
+                        setForm({
+                          ...form,
+                          growth: { ...form.growth, nextAction: inputText },
+                        });
+                      }
+                    }}
                   />
+                  <div className={`text-xs text-right mt-1 ${form.growth.nextAction.trim().split(/\s+/).filter(Boolean).length >= 50 ? 'text-red-500' : 'text-gray-400'}`}>
+                    {form.growth.nextAction.trim().split(/\s+/).filter(Boolean).length} / 50 words
+                  </div>
                 </div>
 
-                <div className="flex justify-between">
-                  <Button onClick={prevStep}>Back</Button>
-                  <Button onClick={nextStep}>Next</Button>
+                <div className="flex justify-between pt-4">
+                  <Button onClick={prevStep} variant="outline" className="rounded-full px-6">
+                    Previous
+                  </Button>
+                  <Button onClick={nextStep} className="rounded-full px-8">
+                    Next
+                  </Button>
                 </div>
               </div>
             )}
 
             {/* STEP 5 */}
             {step === 5 && (
-              <div className="space-y-6">
-                <h2 className="font-semibold">After Outcome</h2>
+              <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
+                <h2 className="font-semibold text-lg">After Outcome</h2>
 
                 <div>
-                  <label className="block text-sm mb-2">
-                    Emotion (1–5)
+                  <label className="block text-sm mb-3 text-gray-700 dark:text-gray-300">
+                    How did you feel?
                   </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={5}
-                    className="w-full p-3 rounded-xl border"
-                    value={form.result.emotionAfter}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        result: {
-                          ...form.result,
-                          emotionAfter: Number(e.target.value),
-                        },
-                      })
-                    }
-                  />
+                  <div className="flex justify-between max-w-sm">
+                    {emotionOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            result: { ...form.result, emotionAfter: option.value },
+                          })
+                        }
+                        className={`text-2xl p-3 rounded-xl transition-all duration-200 ${
+                          form.result.emotionAfter === option.value
+                            ? "bg-blue-500/20 scale-110 shadow-sm"
+                            : "hover:scale-110 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                        }`}
+                      >
+                        {option.emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2">
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">
                     Confidence (1–10)
                   </label>
-                  <input
-                    type="number"
+                  <SmoothSlider
                     min={1}
                     max={10}
-                    className="w-full p-3 rounded-xl border"
                     value={form.result.confidenceAfter}
-                    onChange={(e) =>
+                    onChange={(val) =>
                       setForm({
                         ...form,
-                        result: {
-                          ...form.result,
-                          confidenceAfter: Number(e.target.value),
-                        },
+                        result: { ...form.result, confidenceAfter: val },
                       })
                     }
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2">
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">
                     Experiment Demo Link (optional)
                   </label>
                   <input
                     type="url"
-                    placeholder="https://github.com/..."
-                    className="w-full p-3 rounded-xl border"
+                    placeholder="https://github.com/your-username/your-repo"
+                    className="w-full p-3 rounded-xl border bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-blue-500 outline-none transition placeholder:text-gray-400 dark:placeholder:text-zinc-600"
                     value={form.evidenceLink}
-                    onChange={(e) =>
-                      setForm({ ...form, evidenceLink: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, evidenceLink: e.target.value })}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2">
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">
                     Visibility
                   </label>
                   <select
-                    className="w-full p-3 rounded-xl border"
+                    className="w-full p-3 rounded-xl border bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-blue-500 outline-none transition"
                     value={form.visibility}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        visibility: e.target.value as Visibility,
-                      })
-                    }
+                    onChange={(e) => setForm({ ...form, visibility: e.target.value as Visibility })}
                   >
                     <option value="private">Private</option>
                     <option value="public">Public</option>
                   </select>
                 </div>
 
-                <div className="flex justify-between">
-                  <Button onClick={prevStep}>Back</Button>
+                <div className="flex justify-between pt-4">
+                  <Button onClick={prevStep} variant="outline" className="rounded-full px-6">
+                    Previous
+                  </Button>
                   <Button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="rounded-full px-6"
+                    className="rounded-full px-8"
                   >
                     {loading ? "Creating..." : "Submit Reflection"}
                   </Button>
                 </div>
               </div>
             )}
-
           </MagicCard>
         </div>
       </PageLayout>
+
+      {/* Toast Notification Popup */}
+      {toast.visible && (
+        <div className="fixed top-24 right-6 z-50 animate-in slide-in-from-top-5 fade-in duration-300 pointer-events-none">
+          <div className="flex items-center gap-3 bg-zinc-900 dark:bg-black text-white px-5 py-3 rounded-xl shadow-2xl border border-zinc-800">
+            <span className="text-green-400">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </span>
+            <p className="text-sm font-medium tracking-wide">{toast.message}</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
