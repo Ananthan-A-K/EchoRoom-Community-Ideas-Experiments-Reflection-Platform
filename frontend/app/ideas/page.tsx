@@ -25,6 +25,12 @@ import { PageLayout } from "../community/PageLayout";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 import ActionSearchBar from "@/components/ui/action-search-bar";
+import {
+  getIdeaStatusLabel,
+  IDEA_STATUS_FILTERS,
+  IdeaStatusFilter,
+  normalizeIdeaStatus,
+} from "@/lib/validation";
 
 interface Idea {
   id: number;
@@ -34,13 +40,11 @@ interface Idea {
   complexity: "LOW" | "MEDIUM" | "HIGH";
 }
 
-const STATUS_OPTIONS = [
-  { value: "All", label: "All Status" },
-  { value: "New", label: "New" },
-  { value: "In Progress", label: "In Progress" },
-  { value: "Implemented", label: "Implemented" },
-  { value: "Discarded", label: "Discarded" },
-];
+
+const STATUS_OPTIONS = IDEA_STATUS_FILTERS.map((status) => ({
+  value: status,
+  label: status === "All" ? "All Status" : status,
+}));
 
 const getStatusIcon = (status: string, isActive: boolean) => {
   const colorClass = isActive ? "text-blue-500" : "text-gray-400";
@@ -85,7 +89,7 @@ export default function IdeasPage() {
   const [deleting, setDeleting] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState<IdeaStatusFilter>("All");
   const router = useRouter();
 
   useEffect(() => {
@@ -105,11 +109,20 @@ export default function IdeasPage() {
   }, []);
 
   const filteredIdeas = ideas.filter((idea) => {
+    const normalizedStatus = normalizeIdeaStatus(idea.status);
     const matchesSearch =
       idea.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       idea.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
-      statusFilter === "All" || idea.status === statusFilter;
+
+      statusFilter === "All" ||
+      (statusFilter === "New" && normalizedStatus === "proposed") ||
+      (statusFilter === "In Progress" &&
+      (normalizedStatus === "experiment" || normalizedStatus === "outcome")) ||
+      (statusFilter === "Implemented" && normalizedStatus === "reflection") ||
+      (statusFilter === "Discarded" && normalizedStatus === "discarded");
+
+
     return matchesSearch && matchesStatus;
   });
 
@@ -286,7 +299,7 @@ export default function IdeasPage() {
                   </p>
 
                   <div className="text-sm text-gray-400 mt-auto pt-4 border-t border-white/10">
-                    Status: {idea.status}
+                    Status: {getIdeaStatusLabel(idea.status)}
                   </div>
                 </div>
               </MagicCard>
