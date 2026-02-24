@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { apiFetch } from "../lib/api";
 import BackButton from "../components/BackButton";
 import BulbSvg from "@/components/ui/bulb-svg";
@@ -8,11 +8,12 @@ import { useRouter } from "next/navigation";
 import TrashIcon from "@/components/ui/trash-icon";
 import Button from "@/app/components/ui/Button";
 import { MagicCard } from "@/components/ui/magic-card";
-import { Check, Facebook, Filter, Link2, Linkedin, MessageCircle, Twitter , Layers, Sparkles, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Check, Facebook, Filter, Link2, Linkedin, MessageCircle, Twitter , Layers, Sparkles, Clock, CheckCircle2, XCircle, Heart } from "lucide-react";
 import { PageLayout } from "../community/PageLayout";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 import ActionSearchBar from "@/components/ui/action-search-bar";
+import HeartIcon from "@/components/ui/heart-icon";
 
 interface Idea {
   id: number;
@@ -20,6 +21,13 @@ interface Idea {
   description: string;
   status: string;
   complexity: "LOW" | "MEDIUM" | "HIGH";
+}
+
+interface LikeData {
+  [ideaId: number]: {
+    count: number;
+    liked: boolean;
+  };
 }
 
 const STATUS_OPTIONS = [
@@ -55,7 +63,45 @@ export default function IdeasPage() {
   const [deleteIdea, setDeleteIdea] = useState<Idea | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [likes, setLikes] = useState<LikeData>({});
+  const [likingId, setLikingId] = useState<number | null>(null);
   const router = useRouter();
+
+  // Load likes from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem("echoroom_likes");
+    if (stored) {
+      try {
+        setLikes(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to parse likes", e);
+      }
+    }
+  }, []);
+
+  // Save likes to localStorage when they change
+  const saveLikes = useCallback((newLikes: LikeData) => {
+    setLikes(newLikes);
+    localStorage.setItem("echoroom_likes", JSON.stringify(newLikes));
+  }, []);
+
+  // Toggle like for an idea
+  const handleLike = (ideaId: number) => {
+    setLikingId(ideaId);
+    const currentLike = likes[ideaId] || { count: 0, liked: false };
+    const newLikeState = !currentLike.liked;
+    const newCount = newLikeState ? currentLike.count + 1 : Math.max(0, currentLike.count - 1);
+    
+    const newLikes = {
+      ...likes,
+      [ideaId]: {
+        count: newCount,
+        liked: newLikeState,
+      },
+    };
+    saveLikes(newLikes);
+    setLikingId(null);
+  };
 
   const handleCopyLink = (id: number) => {
     const url = `${window.location.origin}/ideas/${id}`;
@@ -324,8 +370,26 @@ export default function IdeasPage() {
                     {idea.description}
                   </p>
 
-                  <div className="text-sm text-gray-400 mt-auto pt-4 border-t border-white/10">
-                    Status: {idea.status}
+                  <div className="text-sm text-gray-400 mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
+                    <span>Status: {idea.status}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleLike(idea.id); }}
+                      disabled={likingId === idea.id}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all ${
+                        (likes[idea.id]?.liked ?? false)
+                          ? "text-red-500 bg-red-500/10"
+                          : "text-gray-400 hover:text-red-500 hover:bg-red-500/10"
+                      }`}
+                      title={(likes[idea.id]?.liked ?? false) ? "Unlike" : "Like"}
+                    >
+                      <HeartIcon 
+                        filled={(likes[idea.id]?.liked ?? false)} 
+                        className="w-4 h-4" 
+                      />
+                      <span className="text-xs font-medium">
+                        {(likes[idea.id]?.count ?? 0)}
+                      </span>
+                    </button>
                   </div>
                 </div>
               </MagicCard>
