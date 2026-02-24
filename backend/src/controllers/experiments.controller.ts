@@ -70,12 +70,12 @@ export const postExperiment = (
   next: NextFunction
 ): void => {
   try {
-    const { title, description, hypothesis, successMetric, falsifiability, status, linkedIdeaId } = req.body;
+    const { title, description, hypothesis, successMetric, falsifiability, status, endDate, linkedIdeaId } = req.body;
 
-    if (!title || !description || !hypothesis || !successMetric || !falsifiability || !status) {
+    if (!title || !description || !hypothesis || !successMetric || !falsifiability || !status || !endDate) {
       res.status(400).json({
         success: false,
-        message: "title, description, hypothesis, successMetric, falsifiability, and status are required",
+        message: "title, description, hypothesis, successMetric, falsifiability, status, and endDate are required",
       });
       return;
     }
@@ -95,6 +95,7 @@ export const postExperiment = (
       String(successMetric),
       String(falsifiability),
       status,
+      String(endDate),
       linkedIdeaId ? Number(linkedIdeaId) : undefined
     );
 
