@@ -3,7 +3,32 @@
 export interface Reflection {
   id: number;
   outcomeId: number;
-  content: string;
+
+  context: {
+    emotionBefore: number;
+    confidenceBefore: number;
+  };
+
+  breakdown: {
+    whatHappened: string;
+    whatWorked: string;
+    whatDidntWork: string;
+  };
+
+  growth: {
+    lessonLearned: string;
+    nextAction: string;
+  };
+
+  result: {
+    emotionAfter: number;
+    confidenceAfter: number;
+  };
+
+  tags?: string[];
+  evidenceLink?: string;
+  visibility: "private" | "public";
+
   createdAt: Date;
 }
 
@@ -12,17 +37,53 @@ export interface Reflection {
 let reflections: Reflection[] = [];
 let nextId = 1;
 
+export interface ReflectionInput {
+  outcomeId: number;
+
+  context: {
+    emotionBefore: number;
+    confidenceBefore: number;
+  };
+
+  breakdown: {
+    whatHappened: string;
+    whatWorked: string;
+    whatDidntWork: string;
+  };
+
+  growth: {
+    lessonLearned: string;
+    nextAction: string;
+  };
+
+  result: {
+    emotionAfter: number;
+    confidenceAfter: number;
+  };
+
+  tags?: string[];
+  evidenceLink?: string;
+  visibility: "private" | "public";
+}
 
 // Create reflection
 export const createReflection = (
-  outcomeId: number,
-  content: string
+  data: ReflectionInput
 ): Reflection => {
 
   const newReflection: Reflection = {
     id: nextId++,
-    outcomeId,
-    content,
+    outcomeId: data.outcomeId,
+
+    context: data.context,
+    breakdown: data.breakdown,
+    growth: data.growth,
+    result: data.result,
+
+    tags: data.tags ?? [],
+    evidenceLink: data.evidenceLink ?? "",
+    visibility: data.visibility,
+
     createdAt: new Date(),
   };
 
@@ -47,4 +108,10 @@ export const getReflectionsByOutcomeId = (
     reflection => reflection.outcomeId === outcomeId
   );
 
+};
+
+export const getReflectionById = (
+  id: number
+): Reflection | undefined => {
+  return reflections.find(reflection => reflection.id === id);
 };
