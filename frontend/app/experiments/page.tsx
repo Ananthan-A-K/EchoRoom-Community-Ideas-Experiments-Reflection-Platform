@@ -11,7 +11,8 @@ import Button from "@/app/components/ui/Button";
 import ChartHistogramIcon from "@/components/ui/chart-histogram-icon";
 import { MagicCard } from "@/components/ui/magic-card";
 import TrashIcon from "@/components/ui/trash-icon";
-import { Link2, Check } from "lucide-react";
+import { Link2, Check, Clock } from "lucide-react";
+import { differenceInDays, parseISO, isAfter } from "date-fns";
 
 interface Experiment {
   id: number;
@@ -23,6 +24,7 @@ interface Experiment {
   status: "planned" | "in-progress" | "completed";
   statusLabel: "Planned" | "In Progress" | "Completed";
   progress: number;
+  endDate: string;
 }
 
 interface BackendExperiment {
@@ -33,6 +35,7 @@ interface BackendExperiment {
   successMetric: string;
   falsifiability: string;
   status: string;
+  endDate: string;
   progress?: number;
 }
 
@@ -119,27 +122,27 @@ export default function ExperimentsPage() {
     fetchExperiments();
   }, []);
   const handleDelete = async () => {
-  if (!deleteExperiment || deleting) return;
+    if (!deleteExperiment || deleting) return;
 
-  try {
-    setDeleting(true);
+    try {
+      setDeleting(true);
 
-    await apiFetch(`/experiments/${deleteExperiment.id}`, {
-      method: "DELETE",
-    });
+      await apiFetch(`/experiments/${deleteExperiment.id}`, {
+        method: "DELETE",
+      });
 
-    
-    setExperiments(prev =>
-      prev.filter(exp => exp.id !== deleteExperiment.id)
-    );
 
-    setDeleteExperiment(null);
-  } catch (err: any) {
-  setDeleteError(err.message || "Failed to delete experiment");
-} finally {
-    setDeleting(false);
-  }
-};
+      setExperiments(prev =>
+        prev.filter(exp => exp.id !== deleteExperiment.id)
+      );
+
+      setDeleteExperiment(null);
+    } catch (err: any) {
+      setDeleteError(err.message || "Failed to delete experiment");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const getStatusTextColor = (status: string) => {
     if (status === "completed") return "text-green-600 dark:text-green-400";
@@ -241,149 +244,167 @@ export default function ExperimentsPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
             {experiments.map((exp) => (
-  <div
-  key={exp.id}
-  onClick={() => router.push(`/experiments/${exp.id}`)}
-  className="cursor-pointer hover:scale-[1.02] transition"
->
-  <MagicCard
-    className="p-[1px] rounded-xl relative"
-    gradientColor="rgba(59,130,246,0.6)"
-  >
-    <div className="relative p-5 bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl rounded-xl border border-white/10 h-full flex flex-col">
+              <div
+                key={exp.id}
+                onClick={() => router.push(`/experiments/${exp.id}`)}
+                className="cursor-pointer hover:scale-[1.02] transition"
+              >
+                <MagicCard
+                  className="p-[1px] rounded-xl relative"
+                  gradientColor="rgba(59,130,246,0.6)"
+                >
+                  <div className="relative p-5 bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl rounded-xl border border-white/10 h-full flex flex-col">
 
-      {/* Action Buttons */}
-      <div className="absolute top-4 right-4 flex items-center gap-1">
-        <button
-          onClick={(e) => handleCopyLink(e, exp.id)}
-          className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
-          title="Copy link"
-        >
-          {copiedId === exp.id ? (
-            <Check className="w-4 h-4 text-green-500" />
-          ) : (
-            <Link2 className="w-4 h-4" />
-          )}
-        </button>
-        <button
-  onClick={(e) => {
-    e.stopPropagation();
-    setDeleteExperiment(exp);
-  }}
-          className="p-2 text-red-400 hover:text-red-600 transition"
-        >
-          <TrashIcon className="w-5 h-5" />
-        </button>
-      </div>
+                    {/* Action Buttons */}
+                    <div className="absolute top-4 right-4 flex items-center gap-1">
+                      <button
+                        onClick={(e) => handleCopyLink(e, exp.id)}
+                        className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                        title="Copy link"
+                      >
+                        {copiedId === exp.id ? (
+                          <Check className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <Link2 className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteExperiment(exp);
+                        }}
+                        className="p-2 text-red-400 hover:text-red-600 transition"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
 
-      <h2 className="text-xl font-semibold text-black dark:text-white mb-2 pr-8">
-        {exp.title}
-      </h2>
+                    <h2 className="text-xl font-semibold text-black dark:text-white mb-2 pr-8">
+                      {exp.title}
+                    </h2>
 
-      <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
-        {exp.description}
-      </p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+                      {exp.description}
+                    </p>
 
-      <div className="flex justify-between items-center mb-2">
-        <span
-          className={`text-sm font-medium ${getStatusTextColor(exp.status)}`}
-        >
-          Status: {exp.statusLabel}
-        </span>
+                    <div className="flex justify-between items-center mb-2">
+                      <span
+                        className={`text-sm font-medium ${getStatusTextColor(exp.status)}`}
+                      >
+                        Status: {exp.statusLabel}
+                      </span>
 
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          {exp.progress}%
-        </span>
-      </div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {exp.progress}%
+                      </span>
+                    </div>
 
-      <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
-        <div
-          className={`h-2 rounded-full ${getProgressColor(exp.status)}`}
-          style={{ width: `${exp.progress}%` }}
-        />
-      </div>
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 mb-4">
+                      <div
+                        className={`h-2 rounded-full ${getProgressColor(exp.status)}`}
+                        style={{ width: `${exp.progress}%` }}
+                      />
+                    </div>
 
-    </div>
-  </MagicCard>
-  </div>
-))}
+                    {exp.endDate && exp.status !== "completed" && (
+                      <div className="mt-auto pt-4 border-t border-white/5 flex items-center gap-2 text-xs">
+                        <Clock className={`w-3.5 h-3.5 ${differenceInDays(parseISO(exp.endDate), new Date()) <= 3
+                            ? "text-red-500 animate-pulse"
+                            : "text-blue-400"
+                          }`} />
+                        <span className={
+                          differenceInDays(parseISO(exp.endDate), new Date()) <= 3
+                            ? "text-red-500 font-bold"
+                            : "text-gray-400"
+                        }>
+                          {isAfter(new Date(), parseISO(exp.endDate))
+                            ? "Deadline passed"
+                            : `${differenceInDays(parseISO(exp.endDate), new Date())} days remaining`}
+                        </span>
+                      </div>
+                    )}
+
+                  </div>
+                </MagicCard>
+              </div>
+            ))}
           </div>
         )}
       </div>
       {deleteExperiment && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-    onClick={() => !deleting && setDeleteExperiment(null)}
-  >
-    <div onClick={(e) => e.stopPropagation()}>
-      <MagicCard
-        className="p-[1px] rounded-2xl"
-        gradientColor="rgba(59,130,246,0.6)"
-      >
-        <div className="bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl px-7 py-7 w-[380px]">
-
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-black dark:text-white">
-              Delete Experiment
-            </h2>
-            <p className="text-slate-600 dark:text-slate-200 text-sm mt-2 leading-relaxed">
-              "{deleteExperiment.title}" will be permanently removed.
-            </p>
-          </div>
-
-          <div className="flex gap-4">
-            <Button
-              className={`w-full ${deleting ? "opacity-50 pointer-events-none" : ""}`}
-              onClick={() => setDeleteExperiment(null)}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => !deleting && setDeleteExperiment(null)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <MagicCard
+              className="p-[1px] rounded-2xl"
+              gradientColor="rgba(59,130,246,0.6)"
             >
-              Cancel
-            </Button>
+              <div className="bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl px-7 py-7 w-[380px]">
 
-            <Button
-              className={`w-full ${deleting ? "opacity-50 pointer-events-none" : ""}`}
-              onClick={handleDelete}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </Button>
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-black dark:text-white">
+                    Delete Experiment
+                  </h2>
+                  <p className="text-slate-600 dark:text-slate-200 text-sm mt-2 leading-relaxed">
+                    "{deleteExperiment.title}" will be permanently removed.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    className={`w-full ${deleting ? "opacity-50 pointer-events-none" : ""}`}
+                    onClick={() => setDeleteExperiment(null)}
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    className={`w-full ${deleting ? "opacity-50 pointer-events-none" : ""}`}
+                    onClick={handleDelete}
+                  >
+                    {deleting ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+
+              </div>
+            </MagicCard>
           </div>
-
         </div>
-      </MagicCard>
-    </div>
-  </div>
-)}
-{deleteError && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-    onClick={() => setDeleteError(null)}
-  >
-    <div onClick={(e) => e.stopPropagation()}>
-      <MagicCard
-        className="p-[1px] rounded-2xl"
-        gradientColor="rgba(239,68,68,0.6)"
-      >
-        <div className="bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl px-7 py-7 w-[380px]">
+      )}
+      {deleteError && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setDeleteError(null)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <MagicCard
+              className="p-[1px] rounded-2xl"
+              gradientColor="rgba(239,68,68,0.6)"
+            >
+              <div className="bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl px-7 py-7 w-[380px]">
 
-          <h2 className="text-xl font-bold text-blue-100 mb-3">
-            Cannot Delete Experiment
-          </h2>
+                <h2 className="text-xl font-bold text-blue-100 mb-3">
+                  Cannot Delete Experiment
+                </h2>
 
-          <p className="text-slate-200 text-sm leading-relaxed mb-6">
-            {deleteError}
-          </p>
+                <p className="text-slate-200 text-sm leading-relaxed mb-6">
+                  {deleteError}
+                </p>
 
-          <Button
-            className="w-full"
-            onClick={() => setDeleteError(null)}
-          >
-            Okay
-          </Button>
+                <Button
+                  className="w-full"
+                  onClick={() => setDeleteError(null)}
+                >
+                  Okay
+                </Button>
 
+              </div>
+            </MagicCard>
+          </div>
         </div>
-      </MagicCard>
-    </div>
-  </div>
-)}
+      )}
     </PageLayout>
   );
 }

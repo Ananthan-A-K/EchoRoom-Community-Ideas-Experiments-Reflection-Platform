@@ -60,6 +60,7 @@ model Experiment {
   successMetric  String
   falsifiability String
   status      String
+  endDate     DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
