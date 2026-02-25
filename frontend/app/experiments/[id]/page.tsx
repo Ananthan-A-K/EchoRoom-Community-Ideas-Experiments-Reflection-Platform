@@ -235,7 +235,7 @@ export default function ExperimentDetailPage() {
                         </Button>
 
                         <Button
-                          onClick={() => updateStatus("completed")}
+                          onClick={() => router.push(`/outcomes/new?experimentId=${experiment.id}`)}
                           disabled={experiment.status === "planned"}
                           className={`flex items-center gap-2 px-6 ${experiment.status === "planned" ? "opacity-50" : "bg-green-600 hover:bg-green-700 text-white"}`}
                         >
