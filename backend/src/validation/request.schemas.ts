@@ -100,6 +100,7 @@ export const experimentsSchemas = {
         endDate: nonEmptyString.optional(),
         linkedIdeaId: z.string().regex(/^[a-fA-F0-9]{24}$/).optional(),
         outcomeResult: z.enum(["Success", "Failed"]).optional(),
+        progress: z.number().min(0).max(100).optional(),
       })
       .strict(),
   },
