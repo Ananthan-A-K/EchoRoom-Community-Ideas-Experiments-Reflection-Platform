@@ -1,108 +1,38 @@
 # EchoRoom Backend
 
-This is the backend service for EchoRoom.
+Backend service for EchoRoom, built with Express + TypeScript.
 
-Currently, this backend is a **minimal scaffold** intended for OSQ contributors.
+## Current Status
 
----
+The backend is no longer a minimal scaffold. It currently includes:
 
-## What Exists Right Now
+- Auth system with JWT access tokens and refresh tokens
+- Prisma + MongoDB integration for auth persistence (`User`, `RefreshToken`)
+- Domain APIs for ideas, comments, experiments, outcomes, and reflections
+- State transition and optimistic-locking rules for ideas
 
-- Express server
-- Health check endpoint
-- Folder structure for future expansion
+## Important Data Behavior
 
----
+Storage is currently hybrid:
 
-## What Does NOT Exist Yet
+- Persistent in MongoDB (via Prisma): auth users and refresh tokens
+- In-memory only: ideas, comments, experiments, outcomes, reflections
 
-- Authentication
-- Database connection
-- Business logic
-- Permissions
+On restart, in-memory data is reset.
 
-These will be built collaboratively during OSQ.
+## Tech Stack
 
----
+- Node.js + TypeScript
+- Express
+- Prisma ORM
+- MongoDB
+- JWT (`jsonwebtoken`)
+- Password hashing (`bcryptjs`)
 
-## Running the Backend
+## Run Locally
 
 ```bash
+cd backend
 npm install
+npm run prisma:generate
 npm run dev
-http://localhost:5000/health
-
-
-⚠️ **Do NOT edit or remove this**
-
----
-
-## 🟢 Step 4: ADD this BELOW it (very important)
-
-👉 Go to the **next empty line after the code block**  
-👉 Paste the following **exactly as it is**
-
-```md
-### Health Check Endpoint
-
-**GET /health**
-
-**Response (200 OK):**
-```json
-{
-  "status": "ok"
-}
-
-✅ That’s it  
-✅ Do not change anything else  
-✅ Do not move existing text
-
----
-
-## 🧠 What changed? (Simple explanation)
-
-Before:
-- README said `/health` exists
-- But didn’t say **status code**
-
-After:
-- README clearly says:
-  - Method: `GET`
-  - Status code: `200 OK`
-  - Example response
-
-This solves the issue 💯
-
----
-
-## 🟢 Step 5: Save the file
-
-Just **save `README.md`**
-
----
-
-## 🟢 Step 6: Commit the change
-
-In Git Bash:
-
-```bash
-git add README.md
-git commit -m "docs: add HTTP status code for health endpoint"
-
-Contribution Areas
-
-API design
-
-State transitions
-
-Validation logic
-
-Documentation
-
-Testing
-
-Start small and build thoughtfully 🚀
-
-
----
-

@@ -1,3 +1,4 @@
+ docs/add-http-status-codes
 // backend/src/index.ts
 import express, { Request, Response } from "express";
 import cors from "cors";
@@ -45,6 +46,9 @@ app.use((err: any, _req: Request, res: Response, _next: any) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ success: false, message: "Internal server error" });
 });
+=======
+import app from "./app";
+ main
 
 const PORT = process.env.PORT || 5000;
 
