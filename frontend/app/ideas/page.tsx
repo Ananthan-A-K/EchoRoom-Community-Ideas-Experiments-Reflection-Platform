@@ -23,12 +23,14 @@ import {
   CheckCircle2,
   XCircle,
   Heart,
+  Copy,
 } from "lucide-react";
 import { PageLayout } from "../community/PageLayout";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 import ActionSearchBar from "@/components/ui/action-search-bar";
 import HeartIcon from "@/components/ui/heart-icon";
+import CopyIcon from "@/components/ui/copy-icon";
 
 interface Idea {
   id: number;
@@ -342,7 +344,7 @@ export default function IdeasPage() {
                       {copiedId === idea.id ? (
                         <Check className="w-4 h-4 text-green-500" />
                       ) : (
-                        <Link2 className="w-4 h-4" />
+                        <Copy className="w-4 h-4" />
                       )}
                     </button>
 

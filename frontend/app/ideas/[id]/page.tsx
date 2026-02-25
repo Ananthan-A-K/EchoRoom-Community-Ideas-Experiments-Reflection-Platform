@@ -19,8 +19,10 @@ import {
   MessageCircle, 
   Facebook, 
   Check,
-  ArrowLeft 
+  ArrowLeft, 
+  SendIcon
 } from "lucide-react";
+import CopyIcon from "@/components/ui/copy-icon";
 
 interface Idea {
   id: number;
@@ -226,20 +228,16 @@ export default function IdeaDetailPage() {
             </div>
           </div>
         </div>
-
-       {/* Premium Share Section */}
         <div className="relative overflow-hidden bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-5 sm:p-6 mb-12 shadow-sm group">
-          
-          {/* Subtle background glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-500/5 dark:to-purple-500/5 opacity-50 pointer-events-none" />
 
           <div className="relative flex flex-col sm:flex-row items-center justify-between gap-6">
             
             {/* Left side: Icon & Text */}
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-500/20 shadow-sm">
-                <Share2 className="w-5 h-5" />
-              </div>
+             <div className="p-5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-500/20 shadow-sm flex items-center justify-center">
+              <SendIcon className="w-5 h-5 transition-transform duration-300 hover:scale-110" />
+            </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
                   Spread the word
@@ -263,7 +261,7 @@ export default function IdeaDetailPage() {
                   }
                 `}
               >
-                {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+                {copied ? <Check className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
                 {copied ? "Link Copied!" : "Copy Link"}
               </button>
 
