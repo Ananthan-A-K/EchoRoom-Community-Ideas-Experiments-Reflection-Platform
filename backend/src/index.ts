@@ -9,6 +9,7 @@ import outcomesRoutes from "./routes/outcomes.routes";
 import reflectionsRoutes from "./routes/reflections.routes";
 import authRoutes from "./routes/auth.routes";
 import commentsRoutes from "./routes/comments.routes";
+import { errorMiddleware, notFoundMiddleware } from "./middleware/error.middleware";
 
 // import prisma from "./lib/prisma";
 console.log("INDEX TS SERVER STARTED");
@@ -29,10 +30,8 @@ app.use("/outcomes", outcomesRoutes);
 app.use("/reflections", reflectionsRoutes);
 app.use("/ideas/:ideaId/comments", commentsRoutes);
 
-app.use((err: any, _req: Request, res: Response, _next: any) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({ success: false, message: "Internal server error" });
-});
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5000;
 
