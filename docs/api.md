@@ -55,6 +55,12 @@ Returns a list of all experiments created by the community.
     "status": "completed"
   }
 ]
+
+**Error Response (500 Internal Server Error):**
+```json
+{
+  "error": "Failed to fetch experiments"
+}
 ```
 ### 3. Create a New Experiment
 
@@ -76,6 +82,11 @@ Creates a new experiment in the system.
 ```json
 {
   "message": "Experiment created successfully"
+}
+**Error Response (400 Bad Request):**
+```json
+{
+  "error": "Title and description are required"
 }
 ```
 **Error Handling**
