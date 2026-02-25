@@ -250,7 +250,7 @@ export default function IdeasPage() {
             <div className="flex items-center gap-3">
               <BulbSvg className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
               <h1 className="text-3xl sm:text-4xl font-bold text-black dark:text-white">
-                Ideas in EchoRoom
+                Ideas
               </h1>
             </div>
 

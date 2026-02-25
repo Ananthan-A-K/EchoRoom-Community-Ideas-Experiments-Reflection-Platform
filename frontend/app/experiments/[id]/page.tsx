@@ -130,9 +130,9 @@ export default function ExperimentDetailPage() {
           <div>
             <div className="flex justify-between items-start mb-3">
               <h1 className="text-3xl font-bold">
-  {experiment.title}
-</h1>
-              <ShareButton title={experiment.title} description={experiment.description} type="experiment" />
+                {experiment.title}
+              </h1>
+              <ShareButton title={experiment.title} description={experiment.description} type="experiment"/>
             </div>
 
 {/* Linked Idea Display */}
@@ -150,7 +150,7 @@ export default function ExperimentDetailPage() {
   </div>
 )}
 
-<p className="text-gray-600 dark:text-gray-300 italic mb-6">
+<p className="text-gray-600 dark:text-gray-300 mb-6">
   {experiment.description}
 </p>
 
@@ -160,7 +160,7 @@ export default function ExperimentDetailPage() {
       <Beaker className="w-4 h-4" />
       <h3 className="text-sm font-semibold uppercase tracking-wider">Hypothesis</h3>
     </div>
-    <p className="text-gray-200 leading-relaxed">{experiment.hypothesis}</p>
+    <p className="dark:text-gray-200 leading-relaxed">{experiment.hypothesis}</p>
   </div>
 
   <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/10 transition-all hover:bg-green-500/10">
@@ -168,7 +168,7 @@ export default function ExperimentDetailPage() {
       <Target className="w-4 h-4" />
       <h3 className="text-sm font-semibold uppercase tracking-wider">Success Metric</h3>
     </div>
-    <p className="text-gray-200 leading-relaxed">{experiment.successMetric}</p>
+    <p className="dark:text-gray-200 leading-relaxed">{experiment.successMetric}</p>
   </div>
 
   <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 transition-all hover:bg-red-500/10">
@@ -176,7 +176,7 @@ export default function ExperimentDetailPage() {
       <XCircle className="w-4 h-4" />
       <h3 className="text-sm font-semibold uppercase tracking-wider">Falsifiability</h3>
     </div>
-    <p className="text-gray-200 leading-relaxed">{experiment.falsifiability}</p>
+    <p className="dark:text-gray-200 leading-relaxed">{experiment.falsifiability}</p>
   </div>
 </div>
           </div>
