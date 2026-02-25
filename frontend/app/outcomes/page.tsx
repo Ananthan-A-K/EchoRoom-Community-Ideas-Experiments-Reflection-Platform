@@ -103,12 +103,17 @@ export default function OutcomesPage() {
             ← Back to Experiments
           </Button>
         </div>
-
-        <div className="flex items-center gap-3 mb-6">
+       <div className="mb-6">
+        <div className="flex items-center gap-3">
           <ChartLineIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
           <h1 className="text-4xl font-bold text-black dark:text-white">
             Outcomes
           </h1>
+        </div>
+        <br />
+        <p className="text-lg max-w-2xl text-black dark:text-white">
+        Review experiment results, measure impact, and reflect on what moved the needle.
+      </p>
         </div>
 
         {outcomes.length === 0 ? (
@@ -122,6 +127,7 @@ export default function OutcomesPage() {
                 <h3 className="text-xl font-semibold text-black dark:text-white mb-2">
                   No outcomes yet
                 </h3>
+                
                 <p className="text-slate-500 text-sm mb-6">
                   Complete experiments to generate outcomes.
                 </p>
