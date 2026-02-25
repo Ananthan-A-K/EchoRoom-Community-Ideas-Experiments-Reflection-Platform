@@ -1,55 +1,96 @@
 import { getNextIdeaId, ideas } from "../data/ideas.data";
+import { StateMachine } from "../lib/statemachine";
+import { ConflictError } from "../lib/conflictError";
 
-export type IdeaStatus = "draft" | "proposed" | "experiment" | "outcome" | "reflection";
+export type IdeaStatus =
+  | "draft"
+  | "proposed"
+  | "experiment"
+  | "outcome"
+  | "reflection"
+  | "discarded";
+
+export type IdeaComplexity = "LOW" | "MEDIUM" | "HIGH";
 
 export interface Idea {
   id: number;
   title: string;
   description: string;
   status: IdeaStatus;
+  complexity: IdeaComplexity;
   version: number;
   createdAt: string;
   updatedAt: string;
 }
 
-
-// allowed transitions
-import { StateMachine } from "../lib/statemachine";
-
+// 🔹 Allowed transitions
 const ideaStateMachine = new StateMachine<IdeaStatus>({
-  draft: ["proposed"],
-  proposed: ["experiment"],
-  experiment: ["outcome"],
-  outcome: ["reflection"],
+  draft: ["proposed", "discarded"],
+  proposed: ["experiment", "discarded"],
+  experiment: ["outcome", "discarded"],
+  outcome: ["reflection", "discarded"],
   reflection: [],
+  discarded: [],
 });
 
-// Get all ideas
+const IDEA_STATUS_ALIASES: Record<string, IdeaStatus> = {
+  draft: "draft",
+  proposed: "proposed",
+  experiment: "experiment",
+  outcome: "outcome",
+  reflection: "reflection",
+  discarded: "discarded",
+  new: "proposed",
+  "in progress": "experiment",
+  "in-progress": "experiment",
+  in_progress: "experiment",
+  implemented: "reflection",
+};
+
+export const normalizeIdeaStatus = (status: unknown): IdeaStatus | null => {
+  if (typeof status !== "string") {
+    return null;
+  }
+
+  return IDEA_STATUS_ALIASES[status.trim().toLowerCase()] ?? null;
+};
+
+// 🔹 Get all ideas
 export const getAllIdeas = (): Idea[] => {
   return ideas;
 };
 
-// Get only published ideas (non-draft)
+// 🔹 Get published ideas (non-draft)
 export const getPublishedIdeas = (): Idea[] => {
-  return ideas.filter(i => i.status !== "draft");
+  return ideas.filter((i) => i.status !== "draft");
 };
 
-//valualable api feature
+// 🔹 Get draft ideas
+export const getDraftIdeas = (): Idea[] => {
+  return ideas.filter((i) => i.status === "draft");
+};
 
-export const getAvailableTransitions = (id: number): IdeaStatus[] | null => {
-  const idea = ideas.find(i => i.id === id);
+// 🔹 Get idea by ID
+export const getIdeaById = (id: number): Idea | null => {
+  return ideas.find((i) => i.id === id) || null;
+};
+
+// 🔹 Get available transitions
+export const getAvailableTransitions = (
+  id: number
+): IdeaStatus[] | null => {
+  const idea = ideas.find((i) => i.id === id);
   if (!idea) return null;
 
   return ideaStateMachine.getAllowedTransitions(idea.status);
 };
 
-// Get only draft ideas
-export const getDraftIdeas = (): Idea[] => {
-  return ideas.filter(i => i.status === "draft");
-};
-
-// Create new idea
-export const createIdea = (title: string, description: string): Idea => {
+// 🔹 Create proposed idea
+export const createIdea = (
+  title: string,
+  description: string,
+  complexity: IdeaComplexity = "MEDIUM"
+): Idea => {
   const now = new Date().toISOString();
 
   const newIdea: Idea = {
@@ -57,6 +98,7 @@ export const createIdea = (title: string, description: string): Idea => {
     title,
     description,
     status: "proposed",
+    complexity,
     version: 1,
     createdAt: now,
     updatedAt: now,
@@ -66,8 +108,12 @@ export const createIdea = (title: string, description: string): Idea => {
   return newIdea;
 };
 
-// Create a draft
-export const createDraft = (title: string, description: string): Idea => {
+// 🔹 Create draft
+export const createDraft = (
+  title: string,
+  description: string,
+  complexity: IdeaComplexity = "MEDIUM"
+): Idea => {
   const now = new Date().toISOString();
 
   const newDraft: Idea = {
@@ -75,7 +121,8 @@ export const createDraft = (title: string, description: string): Idea => {
     title,
     description,
     status: "draft",
-    version: 1, 
+    complexity,
+    version: 1,
     createdAt: now,
     updatedAt: now,
   };
@@ -84,72 +131,61 @@ export const createDraft = (title: string, description: string): Idea => {
   return newDraft;
 };
 
-// Update a draft (title/description)
+// 🔹 Update draft (optimistic locking)
 export const updateDraft = (
   id: number,
   title: string,
   description: string,
   version: number
 ): Idea | null => {
-  const idea = ideas.find(i => i.id === id);
-
-  if (!idea) return null;
-
-if (idea.version !== version) {
-throw new Error("Idea has been modified by another user");
-}
-
-idea.title = title;
-idea.description = description;
-idea.version += 1; // increment version
-idea.updatedAt = new Date().toISOString();
-  return idea;
-};
-
-// Publish a draft (change from draft to proposed)
-// Publish a draft (change from draft to proposed)
-export const publishDraft = (
-  id: number,
-  version: number
-): Idea | null => {
-  const idea = ideas.find(i => i.id === id);
+  const idea = ideas.find((i) => i.id === id);
   if (!idea) return null;
 
   if (idea.version !== version) {
-    throw new Error("Idea has been modified by another user");
+    throw new ConflictError("Idea has been modified by another user");
   }
 
-  idea.status = "proposed";
+  idea.title = title;
+  idea.description = description;
   idea.version += 1;
   idea.updatedAt = new Date().toISOString();
 
   return idea;
 };
 
+// 🔹 Publish draft
+export const publishDraft = (
+  id: number,
+  version: number
+): Idea | null => {
+  return updateIdeaStatus(id, "proposed", version);
+};
 
-// Update idea status
-// Update idea status
+// 🔹 Update idea status (state machine + optimistic locking)
 export const updateIdeaStatus = (
   id: number,
-  status: IdeaStatus
+  status: IdeaStatus,
+  version: number
 ): Idea | null => {
-  const idea = ideas.find(i => i.id === id);
+  const idea = ideas.find((i) => i.id === id);
   if (!idea) return null;
 
+  if (idea.version !== version) {
+    throw new ConflictError("Idea has been modified by another user");
+  }
+
   idea.status = ideaStateMachine.transition(idea.status, status);
+  idea.version += 1;
   idea.updatedAt = new Date().toISOString();
 
   return idea;
 };
+
+// 🔹 Delete idea
 export const deleteIdea = (id: number): boolean => {
-  const index = ideas.findIndex(i => i.id === id);
-
-
+  const index = ideas.findIndex((i) => i.id === id);
   if (index === -1) return false;
 
   ideas.splice(index, 1);
   return true;
-};
-export const getIdeaById = (id: number): Idea | null => {
-  return ideas.find(i => i.id === id) || null;
 };

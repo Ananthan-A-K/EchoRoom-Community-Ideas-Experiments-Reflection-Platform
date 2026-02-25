@@ -11,8 +11,12 @@ export interface Experiment {
   id: number;
   title: string;
   description: string;
+  hypothesis: string;
+  successMetric: string;
+  falsifiability: string;
   status: ExperimentStatus;
-  linkedIdeaId?: number | null; 
+  endDate: string; // ISO date string
+  linkedIdeaId?: number | null;
   outcomeResult?: "Success" | "Failed" | null;
   createdAt: Date;
 }
@@ -53,7 +57,11 @@ export const getExperimentById = (id: number): Experiment | null => {
 export const createExperiment = (
   title: string,
   description: string,
+  hypothesis: string,
+  successMetric: string,
+  falsifiability: string,
   status: ExperimentStatus,
+  endDate: string,
   linkedIdeaId?: number
 ): Experiment => {
 
@@ -61,7 +69,11 @@ export const createExperiment = (
     id: nextId++,
     title,
     description,
+    hypothesis,
+    successMetric,
+    falsifiability,
     status,
+    endDate,
     linkedIdeaId: linkedIdeaId ?? null,
     createdAt: new Date(),
   };
@@ -88,16 +100,25 @@ export const updateExperiment = (
   if (updates.description !== undefined)
     experiment.description = updates.description;
 
+  if (updates.hypothesis !== undefined)
+    experiment.hypothesis = updates.hypothesis;
+
+  if (updates.successMetric !== undefined)
+    experiment.successMetric = updates.successMetric;
+
+  if (updates.falsifiability !== undefined)
+    experiment.falsifiability = updates.falsifiability;
+
   if (updates.status !== undefined) {
-  // If already completed block any status change
-  if (experiment.status === "completed") {
-    throw new Error("Completed experiments cannot be modified");
+    // If already completed block any status change
+    if (experiment.status === "completed") {
+      throw new Error("Completed experiments cannot be modified");
+    }
+    experiment.status = updates.status;
   }
-  experiment.status = updates.status;
-}
 
   if (updates.outcomeResult !== undefined)
-  experiment.outcomeResult = updates.outcomeResult;
+    experiment.outcomeResult = updates.outcomeResult;
 
   return experiment;
 };

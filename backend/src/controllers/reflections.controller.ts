@@ -3,6 +3,7 @@ import {
   createReflection,
   getAllReflections,
   getReflectionsByOutcomeId,
+  getReflectionById,
 } from "../services/reflections.service";
 
 export const postReflection = (
@@ -11,17 +12,27 @@ export const postReflection = (
   next: NextFunction
 ): void => {
   try {
-    const { outcomeId, content } = req.body;
+    const {
+      outcomeId,
+      context,
+      breakdown,
+      growth,
+      result,
+      tags,
+      evidenceLink,
+      visibility,
+    } = req.body;
 
-    if (!outcomeId || !content) {
-      res.status(400).json({
-        success: false,
-        message: "outcomeId and content are required",
-      });
-      return;
-    }
-
-    const reflection = createReflection(Number(outcomeId), String(content));
+    const reflection = createReflection({
+      outcomeId: Number(outcomeId),
+      context,
+      breakdown,
+      growth,
+      result,
+      tags,
+      evidenceLink,
+      visibility,
+    });
 
     res.status(201).json({
       success: true,
@@ -58,14 +69,6 @@ export const getReflectionsByOutcome = (
   try {
     const outcomeId = Number(req.params.outcomeId);
 
-    if (Number.isNaN(outcomeId)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid outcomeId",
-      });
-      return;
-    }
-
     const reflections = getReflectionsByOutcomeId(outcomeId);
 
     res.json({
@@ -76,3 +79,30 @@ export const getReflectionsByOutcome = (
     next(error);
   }
 };
+
+export const getReflectionByIdController = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    const id = Number(req.params.id);
+
+    const reflection = getReflectionById(id);
+
+    if (!reflection) {
+      res.status(404).json({
+        success: false,
+        message: "Reflection not found",
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: reflection,
+    });
+  } catch (error) {
+    next(error);
+  }
+}; 

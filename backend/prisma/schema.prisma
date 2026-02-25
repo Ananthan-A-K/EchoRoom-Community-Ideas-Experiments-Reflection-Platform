@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = env("DATABASE_URL")
+  url      = "mongodb://localhost:27017/echoroom?authSource=admin"
 }
 
 model User {
@@ -17,6 +17,7 @@ model User {
   updatedAt    DateTime @updatedAt
   
   refreshTokens RefreshToken[]
+  likes         Like[]
 }
 
 model RefreshToken {
@@ -39,19 +40,29 @@ model Idea {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String
-  status      String // Using String for now as per SETUP.md it is likely just a field
+  status      String 
+  complexity  IdeaComplexity @default(MEDIUM)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   authorId    String @db.ObjectId
-  // author    User   @relation... omitted for simplicity unless required by code
-  // experiments...
+  likes       Like[]
+}
+
+enum IdeaComplexity {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 model Experiment {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String
+  hypothesis     String
+  successMetric  String
+  falsifiability String
   status      String
+  endDate     DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -67,4 +78,15 @@ model Reflection {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
   createdAt DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  ideaId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, ideaId])
 }
