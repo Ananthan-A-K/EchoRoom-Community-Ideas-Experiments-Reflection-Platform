@@ -12,30 +12,36 @@ export default function LoadingScreen() {
   
   // Map the 0-100 percentage directly to the Y-axis position of the SVG wave.
   // When count is 0, wave is at Y=150 (below text). When count is 100, wave is at Y=-150 (above text).
-  const waveY = useTransform(count, [0, 100], [150, -150]);
+  const waveY = useTransform(count, [0, 100], [120, -120]);
 
   useEffect(() => {
-    // Run the percentage counter and wave fill perfectly in sync over 3.5 seconds
-    const controls = animate(count, 100, {
+  let controls: any;
+
+  const start = () => {
+    controls = animate(count, 100, {
       duration: 5,
-      ease: "easeInOut",
+      ease: "linear",
     });
 
     controls.then(() => {
-      // Hold at 100% for a brief moment before fading out smoothly
       setTimeout(() => {
         setIsLoading(false);
       }, 600);
     });
+  };
 
-    return controls.stop;
-  }, [count]);
+  const raf = requestAnimationFrame(start);
+
+  return () => {
+    cancelAnimationFrame(raf);
+    controls?.stop();
+  };
+}, []);
 
   return (
     <AnimatePresence mode="wait">
       {isLoading && (
         <motion.div
-          // Cinematic fade out to reveal your page
           exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#050505] overflow-hidden"
         >
