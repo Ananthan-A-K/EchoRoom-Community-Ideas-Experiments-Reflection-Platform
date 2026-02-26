@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "../community/PageLayout";
 import { apiFetch } from "../lib/api";
@@ -9,7 +9,11 @@ import ErrorState from "../components/ErrorState";
 import Button from "@/app/components/ui/Button";
 import { MagicCard } from "@/components/ui/magic-card";
 import ChartLineIcon from "@/components/ui/chart-line-icon";
-import { ArrowLeft, Calendar, CheckCircle, XCircle, MinusCircle, FileText, HelpCircle, PenTool, Zap, Activity, SignalLow, SignalHigh, TrendingUp, TrendingDown, Eye } from "lucide-react";
+import { 
+  ArrowLeft, Calendar, CheckCircle, XCircle, MinusCircle, FileText, 
+  HelpCircle, PenTool, Zap, Activity, SignalLow, SignalHigh, 
+  TrendingUp, TrendingDown, Eye, Search, Filter, ArrowUpDown
+} from "lucide-react";
 
 interface Outcome {
   id: string;
@@ -37,6 +41,12 @@ export default function OutcomesPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  // --- Filter & Sort State ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterResult, setFilterResult] = useState<string>("ALL");
+  const [filterImpact, setFilterImpact] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<"NEWEST" | "OLDEST">("NEWEST");
+
   useEffect(() => {
     const fetchOutcomes = async () => {
       try {
@@ -51,6 +61,32 @@ export default function OutcomesPage() {
     };
     fetchOutcomes();
   }, []);
+
+  // --- Derived Data for Display ---
+  const filteredAndSortedOutcomes = useMemo(() => {
+    return outcomes
+      .filter((outcome) => {
+        const matchesSearch = outcome.experimentTitle.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              outcome.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesResult = filterResult === "ALL" || outcome.result === filterResult;
+        const matchesImpact = filterImpact === "ALL" || outcome.impactLevel === filterImpact;
+        return matchesSearch && matchesResult && matchesImpact;
+      })
+      .sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        return sortBy === "NEWEST" ? timeB - timeA : timeA - timeB;
+      });
+  }, [outcomes, searchQuery, filterResult, filterImpact, sortBy]);
+
+  // --- Quick Stats ---
+  const stats = useMemo(() => {
+    return {
+      total: outcomes.length,
+      successes: outcomes.filter(o => o.result === "SUCCESS").length,
+      breakthroughs: outcomes.filter(o => o.impactLevel === "BREAKTHROUGH").length,
+    };
+  }, [outcomes]);
 
   const getResultStyle = (result?: string) => {
     switch(result) {
@@ -87,7 +123,7 @@ export default function OutcomesPage() {
       <div className="section animate-in fade-in duration-500">
         
         {/* Header Area */}
-        <div className="mb-10">
+        <div className="mb-8">
           <div className="mb-6">
             <Button onClick={() => router.push("/experiments")} variant="secondary" className="text-sm">
               ← Back to experiments
@@ -101,6 +137,101 @@ export default function OutcomesPage() {
             Review experiment results, measure impact, and reflect on what moved the needle.
           </p>
         </div>
+
+        {/* Dashboard/Controls Area */}
+        {outcomes.length > 0 && (
+          <div className="mb-8 space-y-6">
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Experiments</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                </div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Successes</p>
+                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.successes}</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Breakthroughs</p>
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.breakthroughs}</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center">
+              {/* Search */}
+              <div className="relative w-full md:w-1/3">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search outcomes..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white transition-all"
+                />
+              </div>
+
+              {/* Select Filters */}
+              <div className="flex w-full md:w-auto flex-1 gap-3">
+                <div className="relative flex-1 md:flex-none">
+                  <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <select 
+                    value={filterResult} 
+                    onChange={(e) => setFilterResult(e.target.value)}
+                    className="w-full pl-9 pr-8 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white appearance-none cursor-pointer"
+                  >
+                    <option value="ALL">All Results</option>
+                    <option value="SUCCESS">Success</option>
+                    <option value="FAILED">Failed</option>
+                    <option value="MIXED">Mixed</option>
+                  </select>
+                </div>
+
+                <div className="relative flex-1 md:flex-none">
+                  <Zap className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <select 
+                    value={filterImpact} 
+                    onChange={(e) => setFilterImpact(e.target.value)}
+                    className="w-full pl-9 pr-8 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white appearance-none cursor-pointer"
+                  >
+                    <option value="ALL">All Impacts</option>
+                    <option value="BREAKTHROUGH">Breakthrough</option>
+                    <option value="STRONG">Strong</option>
+                    <option value="MODERATE">Moderate</option>
+                    <option value="LOW">Low</option>
+                  </select>
+                </div>
+
+                <div className="relative flex-1 md:flex-none ml-auto">
+                  <ArrowUpDown className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <select 
+                    value={sortBy} 
+                    onChange={(e) => setSortBy(e.target.value as "NEWEST" | "OLDEST")}
+                    className="w-full pl-9 pr-8 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white appearance-none cursor-pointer"
+                  >
+                    <option value="NEWEST">Newest First</option>
+                    <option value="OLDEST">Oldest First</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {outcomes.length === 0 ? (
           <div className="flex justify-center mt-14">
@@ -117,15 +248,30 @@ export default function OutcomesPage() {
               </div>
             </MagicCard>
           </div>
+        ) : filteredAndSortedOutcomes.length === 0 ? (
+           <div className="py-20 text-center">
+             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+               <Search className="w-6 h-6 text-slate-400" />
+             </div>
+             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">No matches found</h3>
+             <p className="text-slate-500">Try adjusting your filters or search query.</p>
+             <button 
+               onClick={() => { setSearchQuery(""); setFilterResult("ALL"); setFilterImpact("ALL"); }}
+               className="mt-4 text-blue-500 hover:text-blue-600 font-medium text-sm"
+             >
+               Clear all filters
+             </button>
+           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {outcomes.map((outcome) => {
+            {filteredAndSortedOutcomes.map((outcome) => {
               const resStyle = getResultStyle(outcome.result);
               const impStyle = getImpactStyle(outcome.impactLevel);
               const momStyle = getMomentumConfig(outcome.momentum);
               
               return (
                 <div key={outcome.id} onClick={() => setSelectedOutcome(outcome)} className="cursor-pointer group h-full flex flex-col">
+                  {/* ... Existing Card Code ... */}
                   <MagicCard className="p-[1px] rounded-2xl relative h-full flex-grow transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-blue-500/10" gradientColor="rgba(59,130,246,0.3)">
                     <div className={`p-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-white/5 h-full flex flex-col overflow-hidden ${momStyle.border}`}>
                       
@@ -171,7 +317,7 @@ export default function OutcomesPage() {
           </div>
         )}
 
-        {/* Premium Outcome Modal */}
+        {/* ... Existing Premium Outcome Modal ... */}
         {selectedOutcome && (
           <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 sm:p-6" onClick={() => setSelectedOutcome(null)}>
             <div onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl animate-in zoom-in-95 fade-in duration-200">
