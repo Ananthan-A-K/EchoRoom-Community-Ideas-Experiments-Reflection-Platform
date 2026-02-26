@@ -133,6 +133,14 @@ Optional count override:
 npm run prisma:generate
 
  chore/explicit-health-status
+ chore/explicit-health-status
+
+docs/backend-local-development-checklist
+docs/backend-local-development-checklist
+
+ docs/add-env-vars-table
+ main
+ main
 ---
 
 ## Environment Variables
@@ -144,6 +152,9 @@ Make sure these are defined in your `.env` file before starting the server.
 |----------------|----------|-------------|
 | JWT_SECRET     | ✅       | Used to sign and verify JWT access tokens |
 | DATABASE_URL   | ✅       | MongoDB connection string used by Prisma |
+ chore/explicit-health-status
+ docs/backend-local-development-checklist
+ main
 ## Local Development Checklist
 
 Before running the backend, ensure:
@@ -153,7 +164,20 @@ Before running the backend, ensure:
 - `npm run prisma:generate` has been executed
 - `JWT_SECRET` is set
 
+ chore/explicit-health-status
+
+SEED_IDEAS_COUNT=250 npm run seed:ideas
+```
+ main
+main
+
+
+ main
 SEED_IDEAS_COUNT=250 npm run seed:ideas
 ```
  main
  main
+ chore/explicit-health-status
+
+ main
+main
