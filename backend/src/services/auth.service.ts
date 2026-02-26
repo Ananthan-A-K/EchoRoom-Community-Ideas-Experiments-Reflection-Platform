@@ -2,6 +2,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
+import crypto from "crypto";
 import prisma from "../lib/prisma";
 import { User, UserRole } from "@prisma/client";
 
@@ -21,6 +22,10 @@ export interface TokenPair {
   refreshToken: string;
 }
 
+const hashToken = (token: string): string => {
+  return crypto.createHash("sha256").update(token).digest("hex");
+};
+
 export const hashPassword = async (password: string): Promise<string> => {
   const salt = await bcrypt.genSalt(12);
   return bcrypt.hash(password, salt);
@@ -36,17 +41,19 @@ export const generateAccessToken = (payload: AuthPayload): string => {
 
 export const generateRefreshToken = async (userId: string): Promise<string> => {
   const token = uuidv4();
+  const hashedToken = hashToken(token);
   const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_IN);
   
   await prisma.refreshToken.create({
-    data: { token, userId, expiresAt },
+    data: { token: hashedToken, userId, expiresAt },
   });
   
   return token;
 };
 
 export const verifyRefreshToken = async (token: string): Promise<string | null> => {
-  const refreshToken = await prisma.refreshToken.findUnique({ where: { token } });
+  const hashedToken = hashToken(token);
+  const refreshToken = await prisma.refreshToken.findUnique({ where: { token: hashedToken } });
   
   if (!refreshToken) return null;
   
@@ -123,13 +130,15 @@ export const refreshAccessToken = async (refreshToken: string): Promise<TokenPai
     throw new Error("User not found");
   }
   
-  await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+  const hashedToken = hashToken(refreshToken);
+  await prisma.refreshToken.deleteMany({ where: { token: hashedToken } });
   
   return generateTokenPair(user);
 };
 
 export const logoutUser = async (refreshToken: string): Promise<void> => {
-  await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+  const hashedToken = hashToken(refreshToken);
+  await prisma.refreshToken.deleteMany({ where: { token: hashedToken } });
 };
 
 export const getUserById = async (id: string): Promise<User | null> => {
