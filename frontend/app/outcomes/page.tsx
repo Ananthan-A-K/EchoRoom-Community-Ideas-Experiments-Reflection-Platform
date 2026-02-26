@@ -12,8 +12,8 @@ import ChartLineIcon from "@/components/ui/chart-line-icon";
 import { ArrowLeft, Calendar, CheckCircle, XCircle, MinusCircle, FileText, HelpCircle, PenTool, Zap, Activity, SignalLow, SignalHigh, TrendingUp, TrendingDown, Eye } from "lucide-react";
 
 interface Outcome {
-  id: number;
-  experimentId: number;
+  id: string;
+  experimentId: string;
   experimentTitle: string;
   result: "SUCCESS" | "FAILED" | "MIXED";
   impactLevel: "LOW" | "MODERATE" | "STRONG" | "BREAKTHROUGH";

@@ -36,17 +36,29 @@ cd backend
 npm install
 npm run prisma:generate
 npm run dev
-```
 
 Server default: `http://localhost:5000`
 
+ docs/add-common-errors-fixes
+
+---
+
+
+### Health Check Endpoint
+
+**GET /health**
+=======
 Health check:
 
 ```bash
 curl http://localhost:5000/health
 ```
+ main
 
 ## Scripts
+
+ docs/add-common-errors-fixes
+
 
 - `npm run dev` - Run backend with ts-node
 - `npm run build` - Compile TypeScript to `dist/`
@@ -73,6 +85,7 @@ Mounted route groups in `src/index.ts`:
 Detailed endpoint docs: `../docs/api.md`
 
 ## Repo Structure
+ main
 
 ```text
 backend/
@@ -90,6 +103,17 @@ backend/
   SETUP.md
 ```
 
+docs/add-common-errors-fixes
+## Common Errors & Fixes
+
+This section lists common setup and runtime issues contributors may encounter when working on the backend, along with quick fixes.
+
+### Prisma client not generated
+
+**Symptom**
+- Server fails to start
+- Errors related to missing Prisma client
+
 ## Known Gaps
 
 - Auth/permissions middleware is not consistently enforced across domain routes
@@ -101,7 +125,59 @@ The backend does not seed idea data automatically at runtime.
 Use `npm run seed:ideas` only when you explicitly want local demo data.
 
 Optional count override:
+ main
 
+**Fix**
 ```bash
+ docs/add-common-errors-fixes
+npm run prisma:generate
+
+ chore/explicit-health-status
+ chore/explicit-health-status
+
+docs/backend-local-development-checklist
+docs/backend-local-development-checklist
+
+ docs/add-env-vars-table
+ main
+ main
+---
+
+## Environment Variables
+
+The backend depends on the following environment variables to run correctly.
+Make sure these are defined in your `.env` file before starting the server.
+
+| Variable       | Required | Description |
+|----------------|----------|-------------|
+| JWT_SECRET     | ✅       | Used to sign and verify JWT access tokens |
+| DATABASE_URL   | ✅       | MongoDB connection string used by Prisma |
+ chore/explicit-health-status
+ docs/backend-local-development-checklist
+ main
+## Local Development Checklist
+
+Before running the backend, ensure:
+
+- MongoDB is running
+- `.env` file exists
+- `npm run prisma:generate` has been executed
+- `JWT_SECRET` is set
+
+ chore/explicit-health-status
+
 SEED_IDEAS_COUNT=250 npm run seed:ideas
 ```
+ main
+main
+
+
+ main
+SEED_IDEAS_COUNT=250 npm run seed:ideas
+```
+ main
+ main
+ chore/explicit-health-status
+
+ main
+main
