@@ -104,7 +104,7 @@ export default function DraftsPage() {
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
             <div className="flex items-center gap-3">
-              <FileDescriptionIcon className="w-7 h-7 sm:w-8 sm:h-8 text-gray-500 dark:text-gray-400" />
+              <FileDescriptionIcon className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400"/>
               <h1 className="text-3xl sm:text-4xl font-bold text-black dark:text-white">
                 My Drafts
               </h1>
@@ -128,10 +128,10 @@ export default function DraftsPage() {
           <div className="flex justify-center mt-14">
             <MagicCard
               className="p-[1px] rounded-xl w-full"
-              gradientColor="rgba(107,114,128,0.6)"
+              gradientColor="rgba(59,130,246,0.6)"
             >
               <div className="bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl rounded-xl border border-white/10 px-6 sm:px-10 py-10 sm:py-12 text-center">
-                <FileDescriptionIcon className="w-10 h-10 mx-auto mb-5 text-gray-400 opacity-80" />
+                <FileDescriptionIcon className="w-10 h-10 mx-auto mb-5 text-blue-400 opacity-80"/>
 
                 <h3 className="text-xl font-semibold text-black dark:text-white mb-2">
                   No drafts yet

@@ -228,7 +228,7 @@ export default function ExperimentsPage() {
             >
               <div className="bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl rounded-xl border border-white/10 px-10 py-16 text-center">
                 <div className=" w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <ChartHistogramIcon className="w-8 h-8 text-blue-500" />
+                  <ChartHistogramIcon className="w-10 h-10 mx-auto mb-5 text-blue-400 opacity-80" />
                 </div>
 
                 <h3 className="text-2xl font-bold text-black dark:text-white mb-3">
